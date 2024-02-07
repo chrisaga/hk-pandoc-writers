@@ -91,6 +91,9 @@ function Writer (doc, opts)
     Emph = function(el)
       return M.span('Emphasis', el.content)
     end,
+    Strikeout = function(el)
+      return M.span('XXX', el.content)
+    end,
     Strong = function(el)
       return M.span('Strong_20_Emphasis', el.content)
     end,
@@ -99,6 +102,9 @@ function Writer (doc, opts)
     end,
     Superscript = function(el)
       return M.span('Superscript', el.content)
+    end,
+    Underline = function(el)
+      return M.span('XXX', el.content)
     end,
 
   }
