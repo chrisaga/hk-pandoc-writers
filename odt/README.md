@@ -58,11 +58,11 @@ This is an ordered list:
 
 #### Quotation
 
-This is a quotation from the great Philosopher Jaegger :
+This is a quotation from the great philosopher Jaegger (as reported by D^r^ Gregory House) :
 
 > You can't always get what you want.
 
-And another from Dr. Gregory House (MD) :
+And another from D^r^. Gregory House (MD) :
 
 > Reality is almost always wrong
 >
@@ -365,3 +365,7 @@ Styling paragraph with style:paragraph-properties:
 
 
 * Usefull for later: document field (such as current chapter number and name) are childs of `<tex:p>`
+
+### Inline Styles
+
+When thirsty, drink H~2~O. Don't breathe to much CO~2~

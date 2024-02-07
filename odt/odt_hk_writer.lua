@@ -87,12 +87,18 @@ function Writer (doc, opts)
       return pandoc.walk_block(block, filterBQ)
     end,
     --
-    -- Emph
+    -- Inline styles
     Emph = function(el)
       return M.span('Emphasis', el.content)
     end,
     Strong = function(el)
       return M.span('Strong_20_Emphasis', el.content)
+    end,
+    Subscript = function(el)
+      return M.span('Subscript', el.content)
+    end,
+    Superscript = function(el)
+      return M.span('Superscript', el.content)
     end,
 
   }
