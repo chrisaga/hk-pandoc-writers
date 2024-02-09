@@ -1,6 +1,6 @@
- 
 
-function Writer (doc, opts)
+
+function ByteStringWriter (doc, opts)
   local filter = {
     --[[ Transform everithing in uppercase (for testing only) --]]
     Str = function (str)
@@ -8,7 +8,7 @@ function Writer (doc, opts)
     end,
   }
   -- write with the default writer
-  return pandoc.write(doc:walk(filter), 'opendocument', opts)
+  return pandoc.write(doc:walk(filter), 'odt', opts)
 end
 
 

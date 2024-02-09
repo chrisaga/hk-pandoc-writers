@@ -15,9 +15,9 @@ local M = {
 
 }
 
---Writer = pandoc.scaffolding.Writer
---
-function Writer (doc, opts)
+-- Beware ! Must use ByteStringWriter with odt doc (zipfiles)
+-- Write is OK for flat opendocument (content.xml)
+function ByteStringWriter (doc, opts)
   local filterBQ = {
     Para = function(block)
       local rList = List:new{pandoc.RawBlock('opendocument',
@@ -44,10 +44,6 @@ function Writer (doc, opts)
   }
 
   local filter = {
-    --[[ Transform everithing in uppercase (for testing only)
-    Str = function (str)
-      return pandoc.text.upper(str.text)
-    end,--]]
     --
     -- Bullet Lists
     BulletList = function(list)
@@ -110,14 +106,14 @@ function Writer (doc, opts)
   }
 
   -- write with the default writer
-  return pandoc.write(doc:walk(filter), 'opendocument', opts)
+  return pandoc.write(doc:walk(filter), 'odt', opts)
 end
 
 function Template()
   local template = pandoc.template
   -- Pandoc's doc says to compile but it fails with error
   --return template.compile(template.default('opendocument'))
-  return template.default('opendocument')
+  return template.default('odt')
 end
 
 function debug(str)

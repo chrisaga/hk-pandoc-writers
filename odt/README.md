@@ -113,6 +113,24 @@ To be fixed (TODO) :
 
 This is _emphasized_. This is **strong**. This is `code`.
 
+When thirsty, drink H~2~O. Don't breathe to much CO~2~
+
+Glucose
+: C~6~H~12~O~6~
+
+Water
+: H~2~O
+
+Methanol
+: CH~3~OH
+
+Ethanol
+: CH~3~CH~2~OH
+
+Acetic Acid
+: CH~3~COOH
+
+
 Documentation and research
 ==========================
 
@@ -365,7 +383,3 @@ Styling paragraph with style:paragraph-properties:
 
 
 * Usefull for later: document field (such as current chapter number and name) are childs of `<tex:p>`
-
-### Inline Styles
-
-When thirsty, drink H~2~O. Don't breathe to much CO~2~
