@@ -36,7 +36,9 @@ Pandoc Objects
 
 * list
 
-This is a bullet list:
+This is a bullet list[^cool]:
+
+[^cool]: Footnotes are cool :-)
 
 * Level one
 	- Level two

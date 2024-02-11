@@ -362,6 +362,28 @@
         <style:text-properties style:font-name="OpenSymbol" />
       </text:list-level-style-bullet>
     </text:list-style>
+    <style:style style:name="Footnote" style:family="paragraph"
+    style:parent-style-name="Standard" style:class="extra">
+      <style:paragraph-properties fo:margin-left="0.6cm"
+      fo:margin-right="0in" fo:text-indent="-0.3cm"
+      style:auto-text-indent="false" text:number-lines="false"
+      text:line-number="0" />
+      <style:text-properties fo:font-size="10pt"
+      style:font-size-asian="10pt"
+      style:font-size-complex="10pt" />
+    </style:style>
+    <style:style style:name="Footer" style:family="paragraph"
+    style:parent-style-name="Standard" style:class="extra">
+      <style:paragraph-properties text:number-lines="false"
+      text:line-number="0">
+        <style:tab-stops>
+          <style:tab-stop style:position="3.25in"
+          style:type="center" />
+          <style:tab-stop style:position="6.5in"
+          style:type="right" />
+        </style:tab-stops>
+      </style:paragraph-properties>
+    </style:style>
     <style:style style:name="Definition_20_Term"
     style:display-name="Definition Term" style:family="paragraph"
     style:parent-style-name="Standard"
