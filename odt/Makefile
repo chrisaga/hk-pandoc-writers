@@ -7,3 +7,19 @@ hk-reference.odt: hk-reference/*
 
 README.odt: hk-reference.odt content.xml README.md
 	pandoc --standalone --reference-doc=hk-reference.odt --write=odt_hk_writer.lua -o README.odt README.md
+
+# Target make some tools and references
+#
+
+pandoc-reference.odt:
+	pandoc -o pandoc-reference.odt --print-default-data-file reference.odt
+
+README.pdf:
+	pandoc --standalone --pdf-engine=pdflatex -o README.pdf README.md
+
+README.latex:
+	pandoc --standalone -o README.latex README.md
+
+README.ast:
+	pandoc -w native -o README.ast README.md
+

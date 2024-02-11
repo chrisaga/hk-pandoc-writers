@@ -88,7 +88,7 @@ function ByteStringWriter (doc, opts)
       return M.span('Emphasis', el.content)
     end,
     Strikeout = function(el)
-      return M.span('XXX', el.content)
+      return M.span('Strikeout', el.content)
     end,
     Strong = function(el)
       return M.span('Strong_20_Emphasis', el.content)
