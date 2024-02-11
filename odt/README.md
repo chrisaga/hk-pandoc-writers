@@ -110,6 +110,8 @@ Some Combinations
 
 I have found a list-style which render well even in BlockQuotes (Quotations) even if there is some kind of styling such as borders or colored background.
 
+Warning ! Google docs doesn't render well the left border of a block quote with nested lists. It's probably an OpenDocument to Google docs conversion issue.
+
 
 >This is a bullet list:
 >
