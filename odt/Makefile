@@ -11,15 +11,15 @@ README.odt: hk-reference.odt content.xml README.md
 # Target make some tools and references
 #
 
-pandoc-reference.odt:
+pandoc-reference.odt: README.md
 	pandoc -o pandoc-reference.odt --print-default-data-file reference.odt
 
-README.pdf:
+README.pdf: README.md
 	pandoc --standalone --pdf-engine=pdflatex -o README.pdf README.md
 
-README.latex:
+README.latex: README.md
 	pandoc --standalone -o README.latex README.md
 
-README.ast:
+README.ast: README.md
 	pandoc -w native -o README.ast README.md
 

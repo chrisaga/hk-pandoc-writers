@@ -28,6 +28,14 @@ Pandoc Objects
 
 #### Bullet lists
 
+[TODO]{.mark}: tight (compact) lists are the same as normal lists :
+
+* This is a
+
+* (Standard) widely spaced
+
+* list
+
 This is a bullet list:
 
 * Level one
@@ -53,8 +61,15 @@ This is an ordered list:
 			2) Level Four again
 		2) Level three again
 	3) Back to level two
-4) Back to level one
-5) Ends with Level one
+2) Back to level one
+3) Must 
+4) Go
+5) To
+6) Ten
+7) Lines
+8) To show
+9) alignment
+10) Ends with Level one
 
 #### Quotation
 
@@ -95,9 +110,6 @@ Some Combinations
 
 I have found a list-style which render well even in BlockQuotes (Quotations) even if there is some kind of styling such as borders or colored background.
 
-To be fixed (TODO) :
-
-* Need an ordered list style with appropriate indentations
 
 >This is a bullet list:
 >
@@ -115,13 +127,13 @@ To be fixed (TODO) :
 >This is an ordered list:
 >
 >1) Level one
->	1) Level two
->	2) Level two again
+>	 1) Level two
+>	 2) Level two again
 >		1) Level three
 >			1) Level Four
 >			2) Level Four again
 >		2) Level three again
->	3) Back to level two
+>	 3) Back to level two
 >4) Back to level one
 >5) Ends with Level one
 >
@@ -137,14 +149,14 @@ This is _emphasized_. This is **strong**. This is `code`.
 
 This text was ~~corrected~~ edited.
 
-#### Superscripts and subscripts
+#### Subscripts
 
 This is done via Pandoc Markdown. [GitHub Flavored Markdown](https://github.github.com/gfm/) (GFM) doesn't know them and the `~` syntax is equivalent to the `~~` syntax and renders as strikeout (GFM call it strikethrough) text.
 
 When thirsty, drink H~2~O. Don't breathe to much CO~2~
 
 
-**TODO**: process definition lists
+This is a definition list:
 
 Glucose
 
@@ -165,3 +177,7 @@ Ethanol
 Acetic Acid
 
 : CH~3~COOH
+
+#### Underlines, Small caps and Highlight
+
+I cannot [underline]{.underline} enough that [small caps]{.smallcaps} and [highlighting]{.mark} are useful.

@@ -2,7 +2,7 @@
 PANDOC_VERSION:must_be_at_least '2.17.2'
 
 local List = require 'pandoc.List'
-local debuging=true
+local debuging=false
 
 local M = {
   span = function(style, content)
@@ -100,7 +100,10 @@ function ByteStringWriter (doc, opts)
       return M.span('Superscript', el.content)
     end,
     Underline = function(el)
-      return M.span('XXX', el.content)
+      return M.span('Underline', el.content)
+    end,
+    SmallCaps = function(el)
+      return M.span('SmallCaps', el.content)
     end,
 
   }

@@ -123,6 +123,9 @@ Documentation Reference [element-text_list-style](https://docs.oasis-open.org/of
   <text:list-level-style-bullet
     style:num-prefix=""		<!-- Character before the nummber -->
     style:num-suffix=""		<!-- Character after the nummber -->
+    style:num-format="1"		<!-- Sequence style = 1|a|A|i|I -->
+    loext:num-list-format="%1%)" <!-- num-suffix is ignored -->
+    
     text:bullet-char="•"		<!-- Unicode character to use as a bullet -->
     text:bullet-relative-size="100%"	<!-- Relative size of the bullet -->
     text:level				<!-- List level -->
