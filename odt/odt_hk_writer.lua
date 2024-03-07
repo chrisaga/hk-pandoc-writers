@@ -4,6 +4,9 @@ PANDOC_VERSION:must_be_at_least '2.17.2'
 local List = require 'pandoc.List'
 local debuging=false
 
+--------------------------------------------------------------------------------
+-- Accessory functions used to build odt xml content (might be a Lua module)
+--------------------------------------------------------------------------------
 local M = {
   span = function(style, content)
       return List:new{pandoc.RawInline('opendocument',
@@ -15,9 +18,17 @@ local M = {
 
 }
 
--- Beware ! Must use ByteStringWriter with odt doc (zipfiles)
--- Write is OK for flat opendocument (content.xml)
+--------------------------------------------------------------------------------
+-- Main Writer function
+--
+-- Beware ! Must use ByteStringWriter to write odt docs (zipfiles)
+-- Writer is OK for flat opendocument (content.xml)
+--------------------------------------------------------------------------------
 function ByteStringWriter (doc, opts)
+  --
+  -- Accessory filter used to write BlockQuote which can contain Para and Plain
+  -- blocks (Plain blocks are in list items)
+  --
   local filterBQ = {
     Para = function(block)
       local rList = List:new{pandoc.RawBlock('opendocument',
@@ -30,25 +41,18 @@ function ByteStringWriter (doc, opts)
       debug('--------------')
       return rList
     end,
-    Plain = function(block)
-      local rList = List:new{pandoc.RawBlock('opendocument',
-                              '<text:p text:style-name="Quotations">'
-                    ..  pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                        :match('^<text:p[^>]+>(.*)</text:p>$')
-                    ..  '</text:p>')}
-      debug('==============')
-      debug(rList)
-      debug('--------------')
-      return rList
-    end,
   }
+  filterBQ.Plain = filterBQ.Para
 
+  --
+  -- Main filter used to write blocks and inlines in xml odt
+  --
   local filter = {
     --
     -- Bullet Lists
     BulletList = function(list)
       local rList = List:new{pandoc.RawBlock('opendocument',
-                                      '<text:list text:style-name="List_20_2">')}
+                             '<text:list text:style-name="List_20_2">')}
       for i, el in pairs(list.content) do
         rList = rList
             .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
@@ -106,12 +110,15 @@ function ByteStringWriter (doc, opts)
       return M.span('SmallCaps', el.content)
     end,
 
-  }
+  } -- end of main filter
 
-  -- write with the default writer
+  -- write with the default writer and the filter
   return pandoc.write(doc:walk(filter), 'odt', opts)
-end
+end -- of main writer function
 
+--------------------------------------------------------------------------------
+-- Assign a default template (required if not set by a CLI option)
+--------------------------------------------------------------------------------
 function Template()
   local template = pandoc.template
   -- Pandoc's doc says to compile but it fails with error
@@ -119,6 +126,7 @@ function Template()
   return template.default('odt')
 end
 
+--------------------------------------------------------------------------------
 function debug(str)
   if(debuging) then
     print(str)
