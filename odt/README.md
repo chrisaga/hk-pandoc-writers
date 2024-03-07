@@ -36,24 +36,33 @@ Pandoc Objects
 
 * list
 
-This is a bullet list[^cool]:
+This is a loose bullet list[^cool]:
 
 [^cool]: Footnotes are cool :-)
 
 * Level one
+
 	- Level two
+
 	- Level two again
+
 		+ Level three
+
 			* Level Four
+
 			* Level Four again
+
 		+ Level three again
+
 	- Back to level two
+
 * Back to level one
+
 * Ends with Level one
 
 ### Ordered lists
 
-This is an ordered list:
+This is a tight ordered list:
 
 1) Level one
 	1) Level two
@@ -115,7 +124,7 @@ I have found a list-style which render well even in BlockQuotes (Quotations) eve
 Warning ! Google docs doesn't render well the left border of a block quote with nested lists. It's probably an OpenDocument to Google docs conversion issue.
 
 
->This is a bullet list:
+>This is a tight bullet list:
 >
 >* Level one
 >	- Level two
@@ -125,20 +134,29 @@ Warning ! Google docs doesn't render well the left border of a block quote with 
 >			* Level Four again
 >		+ Level three again
 >	- Back to level two
->* Back to level one
+>* Back to **level one**
 >* Ends with Level one
 >
->This is an ordered list:
+>This is a loose ordered list:
 >
 >1) Level one
+>
 >	 1) Level two
+>
 >	 2) Level two again
+>
 >		1) Level three
+>
 >			1) Level Four
+>
 >			2) Level Four again
+>
 >		2) Level three again
+>
 >	 3) Back to level two
+>
 >4) Back to level one
+>
 >5) Ends with Level one
 >
 

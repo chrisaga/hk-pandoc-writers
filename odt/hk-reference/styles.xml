@@ -111,6 +111,14 @@
         fo:line-height="115%"/>
     </style:style>
     <!-- TODO: review margins and height -->
+    <style:style style:name="Text_20_body_20_tight"
+      style:display-name="Text body tight" style:family="paragraph"
+      style:parent-style-name="Text_20_body">
+      <style:paragraph-properties
+        fo:margin-top="0cm" fo:margin-bottom="0cm"
+        style:contextual-spacing="false"
+	fo:line-height="100%"/>
+    </style:style>
     <!-- -->
     <style:style style:name="List" style:family="paragraph" style:parent-style-name="Text_20_body" style:class="list">
       <style:text-properties style:font-size-asian="12pt" style:font-name-complex="Noto Sans Devanagari" style:font-family-complex="'Noto Sans Devanagari'" style:font-family-generic-complex="swiss"/>
@@ -250,6 +258,13 @@
         fo:margin-bottom="0.25cm" style:contextual-spacing="false"
         fo:text-indent="0in" style:auto-text-indent="false"
         fo:border-left="1mm solid #adbca5" fo:padding-left="0.2cm"/>
+    </style:style>
+    <style:style style:name="Quotations_20_tight"
+      style:display-name="Quotations tight" style:family="paragraph"
+      style:parent-style-name="Quotations">
+      <style:paragraph-properties
+        fo:margin-top="0cm" fo:margin-bottom="0cm"
+        style:contextual-spacing="false"/>
     </style:style>
     <style:style style:name="Preformatted_20_Text"
     style:display-name="Preformatted Text" style:family="paragraph"
