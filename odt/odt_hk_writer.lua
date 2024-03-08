@@ -2,32 +2,26 @@
 PANDOC_VERSION:must_be_at_least '2.17.2'
 
 local List = require 'pandoc.List'
-local debuging=true
+local debuging=false
 
 --------------------------------------------------------------------------------
 -- Accessory functions used to build odt xml content (might be a Lua module)
 --------------------------------------------------------------------------------
 local M = {
   span = function(style, content)
-      return List:new{pandoc.RawInline('opendocument',
+    -- TODO: See if wee want to return a single RawInline
+    return List:new{pandoc.RawInline('opendocument',
                           '<text:span text:style-name="'
                           .. style .. '">')}
                 .. content
                 .. List:new{pandoc.RawInline('opendocument','</text:span>')}
   end,
   p = function(style, content)
-      return List:new{pandoc.RawBlock('opendocument',
+    -- TODO: See if wee need to accept Inline contents
+    return List:new{pandoc.RawBlock('opendocument',
                           '<text:p text:style-name="'
-                          .. style .. '">')}
-                .. content
-                .. List:new{pandoc.RawBlock('opendocument','</text:p>')}
-  end,
-  pinline = function(style, content)
-    local rList = '<text:p text:style-name="' .. style .. '">'
-                .. pandoc.write(pandoc.Pandoc({content}), 'plain')
-                .. '</text:p>'
-
-    return pandoc.RawBlock('opendocument',rList)    
+                          .. style .. '">'
+                .. content .. '</text:p>')}
   end,
 }
 
@@ -44,57 +38,44 @@ function ByteStringWriter (doc, opts)
   --
   local filterBQ = {
     Para = function(block)
-    --[[
+      --[[
       debug("---------------")
       debug(pandoc.write(pandoc.Pandoc({block.content}), 'opendocument'))
       debug(block.content)
       debug("---------------")
       --]]
       return M.p("Quotations",
-                 List:new{pandoc.RawBlock('opendocument',
                       pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                      :match('^<text:p[^>]+>(.*)</text:p>$'))}
+                      :match('^<text:p[^>]+>(.*)</text:p>$')
       )
     end,
     Plain = function(block)
+      --[[
       debug("---------------")
       debug(block.content)
       debug("---------------")
-      return M.p("Quotations_20_tight",
-                 List:new{pandoc.RawBlock('opendocument',
-                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                      :match('^<text:p[^>]+>(.*)</text:p>$'))}
-      )
-      --[[
-      local rList = M.pinline("Quotations_20_tight", block.content)
-    debug("---------------")
-    debug(rList)
-    debug("---------------")
-      return rList
       --]]
+      return M.p("Quotations_20_tight",
+                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
+                      :match('^<text:p[^>]+>(.*)</text:p>$')
+      )
     end,
   }
-
+  --
+  -- Accessory filter used to polish stuf just before writing
+  --
+  local filterF = {
+    Plain = function(block)
+      return M.p("Text_20_body_20_tight",
+                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
+                      :match('^<text:p[^>]+>(.*)</text:p>$')
+      )
+    end,
+  }
   --
   -- Main filter used to write blocks and inlines in xml odt
   --
   local filter = {
-    Plain = function(block)
-      --[[
-      debug("---------------")
-      debug(pandoc.write(pandoc.Pandoc({block.content}), 'opendocument'))
-      debug(block.content)
-      debug("---------------")
-      --]]
-      --[[
-      return M.p("Text_20_body_20_tight",
-                 List:new{pandoc.RawBlock('opendocument',
-                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                      :match('^<text:p[^>]+>(.*)</text:p>$'))}
-      )
-      --]]
-      return block
-    end,
     -- Lists : list items are Para blocks in loose lists and Plain blocks in
     --         tight lists. => TODO (Cf. filterBQ.Plain)
     --
@@ -118,6 +99,9 @@ function ByteStringWriter (doc, opts)
     --
     -- Ordered Lists
     OrderedList = function(list)
+      debug("---------------")
+      debug(list.content)
+      debug("---------------")
       local rList = List:new{pandoc.RawBlock('opendocument',
                           '<text:list text:style-name="Numbering_20_123">')}
       for i, el in pairs(list.content) do
@@ -137,6 +121,14 @@ function ByteStringWriter (doc, opts)
     -- BlockQuote
     BlockQuote = function(block)
       return pandoc.walk_block(block, filterBQ)
+    end,
+    --
+    -- Plain (default writer makes them paragraphs)
+    Plain = function(block)
+      debug('======== Plain ========')
+      debug(block)
+      debug('=======================')
+      return block
     end,
     --
     -- Inline styles
@@ -165,7 +157,7 @@ function ByteStringWriter (doc, opts)
   } -- end of main filter
 
   -- write with the default writer and the filter
-  return pandoc.write(doc:walk(filter), 'odt', opts)
+  return pandoc.write(doc:walk(filter):walk(filterF), 'odt', opts)
 end -- of main writer function
 
 --------------------------------------------------------------------------------

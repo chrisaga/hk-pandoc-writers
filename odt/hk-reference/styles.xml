@@ -44,7 +44,7 @@
       <style:paragraph-properties style:text-autospace="ideograph-alpha" style:line-break="strict" style:writing-mode="lr-tb" style:font-independent-line-spacing="false">
         <style:tab-stops/>
       </style:paragraph-properties>
-      <style:text-properties style:use-window-font-color="true" loext:opacity="0%" style:font-name="Liberation Serif" fo:font-size="12pt" fo:language="fr" fo:country="FR" style:letter-kerning="true" style:font-name-asian="Noto Serif CJK SC" style:font-size-asian="10.5pt" style:language-asian="zh" style:country-asian="CN" style:font-name-complex="Noto Sans Devanagari1" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN"/>
+      <style:text-properties style:use-window-font-color="true" loext:opacity="0%" style:font-name="Liberation Serif" fo:font-size="12pt" fo:language="en" fo:country="US" style:letter-kerning="true" style:font-name-asian="Noto Serif CJK SC" style:font-size-asian="10.5pt" style:language-asian="zh" style:country-asian="CN" style:font-name-complex="Noto Sans Devanagari1" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN"/>
     </style:default-style>
     <style:default-style style:family="paragraph">
       <style:paragraph-properties fo:orphans="2" fo:widows="2"
@@ -55,7 +55,7 @@
       <style:text-properties style:use-window-font-color="true"
         loext:opacity="0%"
         style:font-name="Liberation Serif" fo:font-size="12pt"
-        fo:language="fr" fo:country="FR" style:letter-kerning="true"
+        fo:language="en" fo:country="US" style:letter-kerning="true"
         style:font-name-asian="Noto Serif CJK SC"
         style:font-size-asian="10.5pt" style:language-asian="zh"
         style:country-asian="CN"

@@ -28,15 +28,9 @@ Pandoc Objects
 
 #### Bullet lists
 
-[TODO]{.mark}: tight (compact) lists are the same as normal lists :
+Pandoc knows two type of lists : _tight_ (compact) lists where there is no extra space between items and _loose_ (normal) lists where there is the same space between items than between text paragraphs[^cool].
 
-* This is a
-
-* (Standard) widely spaced
-
-* list
-
-This is a loose bullet list[^cool]:
+This is a loose bullet list:
 
 [^cool]: Footnotes are cool :-)
 
@@ -50,7 +44,7 @@ This is a loose bullet list[^cool]:
 
 			* Level Four
 
-			* Level Four again
+			* Level Four, **again** !
 
 		+ Level three again
 
@@ -76,7 +70,7 @@ This is a tight ordered list:
 3) Must 
 4) Go
 5) To
-6) Ten
+6) **Ten**
 7) Lines
 8) To show
 9) alignment
@@ -84,7 +78,7 @@ This is a tight ordered list:
 
 #### Quotation
 
-This is a quotation from the great philosopher Jaegger (as reported by D^r^ Gregory House) :
+This is a quotation from the great philosopher Jagger (as reported by D^r^ Gregory House) :
 
 > You can't always get what you want.
 
