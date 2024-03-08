@@ -62,6 +62,20 @@ function ByteStringWriter (doc, opts)
     end,
   }
   --
+  -- Accessory filter used to build table captions
+  -- TODO: keep a counter to set the right table number since LibreOffice
+  -- doesn't recalculate when opening the document (need to press 'F9' key)
+  --
+  local filterTC = {
+    Plain = function(block)
+      return M.p("Table_20_Caption", 'Table <text:sequence text:ref-name="refTable0" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">1</text:sequence>: ' ..
+                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
+                      :match('^<text:p[^>]+>(.*)</text:p>$')
+      )
+    end,
+  }
+  filterTC.Para = filterTC.Plain -- in case someday the caption is a Para
+  --
   -- Accessory filter used to polish stuf just before writing
   --
   local filterF = {
@@ -77,7 +91,7 @@ function ByteStringWriter (doc, opts)
   --
   local filter = {
     -- Lists : list items are Para blocks in loose lists and Plain blocks in
-    --         tight lists. => TODO (Cf. filterBQ.Plain)
+    --         tight lists.
     --
     -- Bullet Lists
     BulletList = function(list)
@@ -125,10 +139,21 @@ function ByteStringWriter (doc, opts)
     --
     -- Plain (default writer makes them paragraphs)
     Plain = function(block)
-      debug('======== Plain ========')
-      debug(block)
-      debug('=======================')
       return block
+    end,
+    --
+    -- Tables
+    Table = function(table)
+      if table.caption.long then
+        local rList = table.caption.long:walk(filterTC) .. {table}
+        table.caption.long = nil
+        debug('================')
+        debug(rList)
+        debug('================')
+        return rList
+      else
+        return table
+      end
     end,
     --
     -- Inline styles

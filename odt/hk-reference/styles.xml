@@ -110,6 +110,10 @@
         style:contextual-spacing="false"
         fo:line-height="115%"/>
     </style:style>
+    <style:style style:name="First_20_paragraph"
+      style:display-name="First paragraph" style:family="paragraph"
+      style:parent-style-name="Text_20_body" style:class="text">
+    </style:style>
     <!-- TODO: review margins and height -->
     <style:style style:name="Text_20_body_20_tight"
       style:display-name="Text body tight" style:family="paragraph"
@@ -117,15 +121,34 @@
       <style:paragraph-properties
         fo:margin-top="0cm" fo:margin-bottom="0cm"
         style:contextual-spacing="false"
-	fo:line-height="100%"/>
+	      fo:line-height="100%"/>
     </style:style>
     <!-- -->
     <style:style style:name="List" style:family="paragraph" style:parent-style-name="Text_20_body" style:class="list">
       <style:text-properties style:font-size-asian="12pt" style:font-name-complex="Noto Sans Devanagari" style:font-family-complex="'Noto Sans Devanagari'" style:font-family-generic-complex="swiss"/>
     </style:style>
-    <style:style style:name="Caption" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
-      <style:paragraph-properties fo:margin-top="0.212cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" text:number-lines="false" text:line-number="0"/>
-      <style:text-properties fo:font-size="12pt" fo:font-style="italic" style:font-size-asian="12pt" style:font-style-asian="italic" style:font-name-complex="Noto Sans Devanagari" style:font-family-complex="'Noto Sans Devanagari'" style:font-family-generic-complex="swiss" style:font-size-complex="12pt" style:font-style-complex="italic"/>
+    <style:style style:name="Caption" style:family="paragraph"
+      style:parent-style-name="Standard" style:class="extra">
+      <style:paragraph-properties
+        fo:text-align="center"
+        fo:margin-top="0.212cm" fo:margin-bottom="0.212cm"
+        style:contextual-spacing="false" text:number-lines="false"
+        text:line-number="0"/>
+      <!--style:text-properties
+        fo:font-size="12pt" fo:font-style="italic"
+        style:font-size-asian="12pt" style:font-style-asian="italic"
+        style:font-name-complex="Noto Sans Devanagari"
+        style:font-family-complex="'Noto Sans Devanagari'"
+        style:font-family-generic-complex="swiss"
+        style:font-size-complex="12pt" style:font-style-complex="italic"/-->
+    </style:style>
+    <style:style style:name="Table_20_Caption"
+      style:display-name="Table Caption" style:family="paragraph"
+      style:parent-style-name="Caption" style:class="text">
+    </style:style>
+    <style:style style:name="Figure_20_Caption"
+      style:display-name="Figure Caption" style:family="paragraph"
+      style:parent-style-name="Caption" style:class="text">
     </style:style>
     <style:style style:name="Index" style:family="paragraph" style:parent-style-name="Standard" style:class="index">
       <style:paragraph-properties text:number-lines="false" text:line-number="0"/>
