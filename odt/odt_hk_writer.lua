@@ -63,12 +63,13 @@ function ByteStringWriter (doc, opts)
   }
   --
   -- Accessory filter used to build table captions
-  -- TODO: keep a counter to set the right table number since LibreOffice
+  -- TODO: - keep a counter to set the right table number since LibreOffice
   -- doesn't recalculate when opening the document (need to press 'F9' key)
+  --       - Use it also to build 'refTable0' index (and table name later)
   --
   local filterTC = {
     Plain = function(block)
-      return M.p("Table_20_Caption", 'Table <text:sequence text:ref-name="refTable0" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">1</text:sequence>: ' ..
+      return M.p("Table", 'Table <text:sequence text:ref-name="refTable0" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">1</text:sequence>: ' ..
                       pandoc.write(pandoc.Pandoc({block}), 'opendocument')
                       :match('^<text:p[^>]+>(.*)</text:p>$')
       )
