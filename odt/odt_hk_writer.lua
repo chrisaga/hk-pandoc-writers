@@ -2,7 +2,7 @@
 PANDOC_VERSION:must_be_at_least '2.17.2'
 
 local List = require 'pandoc.List'
-local debuging=false
+local debuging=true
 
 --------------------------------------------------------------------------------
 -- Accessory functions used to build odt xml content (might be a Lua module)
@@ -96,9 +96,11 @@ function ByteStringWriter (doc, opts)
     --
     -- Bullet Lists
     BulletList = function(list)
+      --[[
       debug("---------------")
       debug(list.content)
       debug("---------------")
+      --]]
       local rList = List:new{pandoc.RawBlock('opendocument',
                              '<text:list text:style-name="List_20_2">')}
       for i, el in pairs(list.content) do
@@ -114,9 +116,11 @@ function ByteStringWriter (doc, opts)
     --
     -- Ordered Lists
     OrderedList = function(list)
+      --[[
       debug("---------------")
       debug(list.content)
       debug("---------------")
+      --]]
       local rList = List:new{pandoc.RawBlock('opendocument',
                           '<text:list text:style-name="Numbering_20_123">')}
       for i, el in pairs(list.content) do
@@ -147,9 +151,13 @@ function ByteStringWriter (doc, opts)
     Table = function(table)
       if table.caption.long then
         local rList = table.caption.long:walk(filterTC) .. {table}
-        table.caption.long = nil
         debug('================')
         debug(rList)
+        debug('================')
+        table.caption.long = nil
+        debug(pandoc.write(pandoc.Pandoc({table}), 'opendocument')
+              :gsub('^(<table:table [^>]*style-name)','%1DefaultTable'))
+              --:gsub('^(<table:table .*table:style-name=)"%w*"','%1"DefaultTable"'))
         debug('================')
         return rList
       else

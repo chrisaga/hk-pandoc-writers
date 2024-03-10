@@ -472,6 +472,18 @@
         style:font-weight-asian="bold" style:font-style-asian="normal"
         style:font-weight-complex="bold" style:font-style-complex="normal"/>
     </style:style>
+    <style:style style:name="TableHeaderRowCell" style:family="table-cell"
+      style:data-style-name="NenUS">
+      <style:table-cell-properties
+        fo:padding="0.1cm"
+        fo:border-left="none" fo:border-right="none"
+        fo:border-top="0.5pt solid #000000"
+        fo:border-bottom="0.5pt solid #000000"/>
+      <style:text-properties
+        fo:font-weight="bold" fo:font-style="normal"
+        style:font-weight-asian="bold" style:font-style-asian="normal"
+        style:font-weight-complex="bold" style:font-style-complex="normal"/>
+    </style:style>
     <style:style style:name="Table.Foot" style:family="table-cell"
       style:data-style-name="NenUS">
       <style:table-cell-properties

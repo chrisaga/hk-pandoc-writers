@@ -18,6 +18,7 @@ Roadmap
 -------
 
 1) Implement the basics (bullet lists and numbered lists) and a clean reference doc as a proof of concept.
+2) Implement Tables
 2) Implement by iteration all Pandoc objects.
 3) Make it "smart" so one could change page size, lang, … of the output document via Pandoc standard mechanism (i.e. with the same reference document).
 
@@ -107,6 +108,16 @@ Here is some xml code.
         style:auto-text-indent="false" />
     </style:style>
 ~~~
+
+#### Tables
+
+
+Tables   are   not easy
+------- ----- ---- ----
+A        B      C  D
+
+Table: Simple Table
+
 
 Some Combinations
 -----------------
