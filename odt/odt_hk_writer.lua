@@ -199,7 +199,6 @@ function ByteStringWriter (doc, opts)
       return M.span('SmallCaps', el.content)
     end,
     Code = function(el)
-      debug(el)
       return M.span('Source_Text', el.text)
     end,
     Quoted = function(el)
@@ -224,13 +223,7 @@ function ByteStringWriter (doc, opts)
 
       local rList
       -- Process table caption if any
-      if table.caption.long then
-        --[[
-        debug('================')
-        debug(table.caption.long)
-        debug(pandoc.utils.stringify(table.caption.long))
-        debug('================')
-        --]]
+      if table.caption.long[1] then
         --TODO: use caption.short if exists
         rList = M.p('Table',
                   'Table <text:sequence text:ref-name="refTable'
@@ -244,10 +237,7 @@ function ByteStringWriter (doc, opts)
         rList = {}
       end
 
-      --[[
       -- Start table
-      rList = rList .. List:new{pandoc.RawBlock('opendocument',
-      --]]
       --debug(table.identifier)
       local tableString = '<table:table table:name="Table'
               .. tableCount.current()
