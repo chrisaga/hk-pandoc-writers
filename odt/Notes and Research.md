@@ -253,3 +253,12 @@ Styling paragraph with style:paragraph-properties:
 
 
 * Usefull for later: document field (such as current chapter number and name) are childs of `<tex:p>`
+
+
+Tables
+------
+`<table:table-row table:default-cell-style-name="TableHeaderRowCell">` does not work. Attribute ignored ?
+
+Globally tables in Libre Office are shitty. Styles are not really styles. Styles in `styles.xml` are ignored.
+
+You can only use so called "automatic-styles" in `content.xml`.

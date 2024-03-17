@@ -117,7 +117,16 @@ Tables   are   not easy
 A        B      C  D
 E        F      G  H
 
-Table: Simple Table
+Table: _Simple_ Table
+
+Tables   are  definitely  not easy
+------- ----- ---------- ---- ----
+A        B      1000       C  D
+E        F      25.5       G  H
+
+Table: **Not** so _Simple_ Table
+Gnouf
+
 
 
 Some Combinations

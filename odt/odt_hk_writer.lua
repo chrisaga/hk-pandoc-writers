@@ -22,6 +22,53 @@ end
 --------------------------------------------------------------------------------
 -- Accessory functions used to build odt xml content (might be a Lua module)
 --------------------------------------------------------------------------------
+local myWriter = pandoc.scaffolding.Writer
+myWriter.Inlines = function(inlines) -- Why is this necessary ?
+  local string = ''
+  for i, el in pairs(inlines) do
+    string = string .. myWriter.Inline(el)
+  end
+  return string
+end
+
+myWriter.Blocks = function(blocks) -- Why is this necessary ?
+  local string = ''
+  for i, el in pairs(blocks) do
+    --debug(el)
+    --s=myWriter.Block(el)
+    string = string .. myWriter.Block(el)
+    --string = string .. s
+  end
+  return tostring(string)
+end
+
+myWriter.Inline.RawInline = function(inline)
+  return inline.text
+end
+
+myWriter.Inline.Str = function (str)
+  return str.text
+end
+
+myWriter.Inline.Space = function ()
+  return ' '
+end
+--[[
+Writer.Inline.SoftBreak = function (_, opts)
+  return opts.wrap_text == "wrap-preserve"
+    and cr
+    or space
+end
+Writer.Inline.LineBreak = cr
+
+Writer.Block.Para = function (para)
+  return {Writer.Inlines(para.content), pandoc.layout.blankline}
+end
+--]]
+myWriter.Block.Plain = function(block)
+  return myWriter.Inlines(block.content)
+end
+
 local M = {
   span = function(style, content)
     -- TODO: See if wee want to return a single RawInline
@@ -33,15 +80,26 @@ local M = {
   end,
   p = function(style, content)
     -- TODO: See if wee need to accept Inline contents
-    return List:new{pandoc.RawBlock('opendocument',
+    if(type(content) == 'string') then
+      return List:new{pandoc.RawBlock('opendocument',
                           '<text:p text:style-name="'
                           .. style .. '">'
-                .. content .. '</text:p>')}
+                  .. content .. '</text:p>')}
+    else
+      return List:new{pandoc.RawBlock('opendocument',
+                          '<text:p text:style-name="'
+                          .. style .. '">')}
+                  .. content
+                  .. List:new{pandoc.RawBlock('opendocument','</text:p>')}
+    end
   end,
   cell = function(cellStyle, pStyle, cell)
     local string='      <table:table-cell table:style-name="'
-                 .. cellStyle ..'">\n'
-    return string .. '      </table:table-cell>\n'
+                 .. cellStyle
+                 ..'" office:value-type="string">\n        <text:p text:style-name="'
+                 .. pStyle .. '">'
+                 .. myWriter.Blocks(cell.content)
+    return string .. '</text:p>\n      </table:table-cell>\n'
   end,
 }
 
@@ -146,16 +204,33 @@ function ByteStringWriter (doc, opts)
       return M.span('SmallCaps', el.content)
     end,
     --
+    -- Inline elements
+    SoftBreak = function()
+      return pandoc.RawInline('opendocument','<text:line-break/>')
+    end,
+    --
     -- Tables
     Table = function(table)
       tableCount.count()
-      debug('================')
-      debug(tableCount.current())
 
       local rList
       -- Process table caption if any
       if table.caption.long then
-        rList = table.caption.long:walk(filterTC)
+        --[[
+        debug('================')
+        debug(table.caption.long)
+        debug(pandoc.utils.stringify(table.caption.long))
+        debug('================')
+        --]]
+        --rList = table.caption.long:walk(filterTC)
+        --TODO: use caption.short if exists
+        rList = M.p('Table',
+                  'Table <text:sequence text:ref-name="refTable'
+                  .. tableCount.current()
+                  .. '" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">'
+                  .. tableCount.current()
+                  .. '</text:sequence>: '
+                  .. myWriter.Blocks(table.caption.long))
         table.caption.long = nil
       else
         rList = {}
@@ -166,42 +241,55 @@ function ByteStringWriter (doc, opts)
       -- Start table
       rList = rList .. List:new{pandoc.RawBlock('opendocument',
       --]]
-      debug('<table:table table:name="Table'
+      --debug(table.identifier)
+      local tableString = '<table:table table:name="Table'
               .. tableCount.current()
-              .. '" table:style-name="DefaultTable">')
+              .. '" table:style-name="DefaultTable">\n'
       -- Process column specifications : alignment and width
       --debug(table.colspecs)
       for i, colspec in pairs(table.colspecs) do
         --debug(" " .. i .. " " .. colspec[1]) --ColWidthDefault is nil ???
-        debug('  <table:table-column table:style-name="Table'
-                 .. colspec[1] .. '" />')
+        tableString = tableString .. '  <table:table-column table:style-name="Table'
+                      .. colspec[1] .. '" />\n'
       end
       -- Process TableHead rows
       if(table.head) then
-        debug('  <table:table-header-rows>')
+        tableString = tableString .. '  <table:table-header-rows>\n'
         for i, row in pairs(table.head.rows) do
-          debug(M.row('TableHeaderRowCell', 'Table_20_Heading', row))
+          tableString = tableString
+                        .. M.row('TableHeaderRowCell', 'Table_20_Heading', row)
+                        .. '\n'
         end
-        debug('  </table:table-header-rows>')
+        tableString = tableString  .. '  </table:table-header-rows>\n'
       end
       -- Process TableBody rows
+      if(table.bodies) then
+        for i, body in pairs(table.bodies) do
+          for r, row in pairs(body.body) do
+            tableString = tableString
+                          .. M.row('TableRowCell', 'Table_20_Contents', row)
+                        .. '\n'
+          end
+        end
+      end
       -- Process TableFoot rows
-      --[[
-      -- End table
-      rList = rList .. List:new{pandoc.RawBlock('opendocument',
-      --]]
-      debug('</table:table>')
 
-      debug('================')
+      tableString = tableString .. '</table:table>'
+      -- use Pandoc's writer to get the table done
       local sss=pandoc.write(pandoc.Pandoc({table}), 'opendocument')
             :gsub('^(<[^>]*=")[^"]*','%1DefaultTable')
+      --[[
+      --debug('================')
+      --debug(tableString)
       debug('================')
       debug(sss)
       debug('================')
+      --]]
       rList = rList .. List:new{pandoc.RawBlock('opendocument', sss)}
+      --rList = rList .. List:new{pandoc.RawBlock('opendocument', tableString)}
 
-      debug(rList)
-      debug('================')
+      --debug(rList)
+      --debug('================')
 
       return rList
     end,
@@ -247,7 +335,7 @@ function ByteStringWriter (doc, opts)
             .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
             .. el
             .. List:new{pandoc.RawBlock('opendocument','</text:list-item>')}
-        debug('[' .. tostring(i) .. ']' .. pandoc.utils.stringify(el))
+        --debug('[' .. tostring(i) .. ']' .. pandoc.utils.stringify(el))
       end
       rList = rList .. List:new{pandoc.RawBlock('opendocument',
                                                 '</text:list>')}
