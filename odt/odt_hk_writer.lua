@@ -28,7 +28,7 @@ myWriter.Inlines = function(inlines) -- Why is this necessary ?
   for i, el in pairs(inlines) do
     string = string .. myWriter.Inline(el)
   end
-  return string
+  return tostring(string)
 end
 
 myWriter.Blocks = function(blocks) -- Why is this necessary ?
@@ -125,32 +125,20 @@ function ByteStringWriter (doc, opts)
   --
   local filterBQ = {
     Para = function(block)
-      --[[
-      debug("---------------")
-      debug(pandoc.write(pandoc.Pandoc({block.content}), 'opendocument'))
-      debug(block.content)
-      debug("---------------")
-      --]]
       return M.p("Quotations",
-                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                      :match('^<text:p[^>]+>(.*)</text:p>$')
+                  myWriter.Inlines(block.content)
       )
     end,
     Plain = function(block)
-      --[[
-      debug("---------------")
-      debug(block)
-      debug("---------------")
-      --]]
       return M.p("Quotations_20_tight",
-                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                      :match('^<text:p[^>]+>(.*)</text:p>$')
+                  myWriter.Inlines(block.content)
       )
     end,
   }
   --
   -- Accessory filter used to build table captions
   --
+  --[[
   local filterTC = {
     Plain = function(block)
       return M.p("Table",
@@ -165,14 +153,14 @@ function ByteStringWriter (doc, opts)
     end,
   }
   filterTC.Para = filterTC.Plain -- in case someday the caption is a Para
+  --]]
   --
   -- Accessory filter used to polish stuf just before writing
   --
   local filterF = {
     Plain = function(block)
       return M.p("Text_20_body_20_tight",
-                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                      :match('^<text:p[^>]+>(.*)</text:p>$')
+                  myWriter.Inlines(block.content)
       )
     end,
   }
@@ -203,6 +191,16 @@ function ByteStringWriter (doc, opts)
     SmallCaps = function(el)
       return M.span('SmallCaps', el.content)
     end,
+    Quoted = function(el)
+      -- TODO: localize quotes
+      if el.quotetype == 'DoubleQuote' then
+        return pandoc.RawInline('opendocument',
+                                 '“' .. myWriter.Inlines(el.content) ..'”')
+      else
+        return pandoc.RawInline('opendocument',
+                                 '‘' .. myWriter.Inlines(el.content) ..'’')
+      end
+    end,
     --
     -- Inline elements
     SoftBreak = function()
@@ -222,7 +220,6 @@ function ByteStringWriter (doc, opts)
         debug(pandoc.utils.stringify(table.caption.long))
         debug('================')
         --]]
-        --rList = table.caption.long:walk(filterTC)
         --TODO: use caption.short if exists
         rList = M.p('Table',
                   'Table <text:sequence text:ref-name="refTable'
@@ -236,7 +233,6 @@ function ByteStringWriter (doc, opts)
         rList = {}
       end
 
-      debug(table)
       --[[
       -- Start table
       rList = rList .. List:new{pandoc.RawBlock('opendocument',
@@ -276,6 +272,7 @@ function ByteStringWriter (doc, opts)
 
       tableString = tableString .. '</table:table>'
       -- use Pandoc's writer to get the table done
+      --debug(table)
       local sss=pandoc.write(pandoc.Pandoc({table}), 'opendocument')
             :gsub('^(<[^>]*=")[^"]*','%1DefaultTable')
       --[[
@@ -346,7 +343,7 @@ function ByteStringWriter (doc, opts)
     --
     -- BlockQuote
     BlockQuote = function(block)
-      return pandoc.walk_block(block, filterBQ)
+      return pandoc.walk_block(block, filterBQ).content
     end,
     --
     -- Plain (default writer makes them paragraphs)
@@ -357,6 +354,7 @@ function ByteStringWriter (doc, opts)
   } -- end of main filter
 
   -- write with the default writer and the filter
+  --debug(doc)
   return pandoc.write(doc:walk(filterI):walk(filter):walk(filterF), 'odt', opts)
 end -- of main writer function
 
