@@ -115,6 +115,7 @@ Here is some xml code.
 Tables   are   not easy
 ------- ----- ---- ----
 A        B      C  D
+E        F      G  H
 
 Table: Simple Table
 

@@ -5,6 +5,21 @@ local List = require 'pandoc.List'
 local debuging=true
 
 --------------------------------------------------------------------------------
+-- Create a counter
+--------------------------------------------------------------------------------
+function newCounter()
+  local value=0
+  return {
+    count = function()
+      value=value+1
+      return value
+    end,
+    current = function()
+      return value
+    end,
+  }
+end
+--------------------------------------------------------------------------------
 -- Accessory functions used to build odt xml content (might be a Lua module)
 --------------------------------------------------------------------------------
 local M = {
@@ -23,7 +38,20 @@ local M = {
                           .. style .. '">'
                 .. content .. '</text:p>')}
   end,
+  cell = function(cellStyle, pStyle, cell)
+    local string='      <table:table-cell table:style-name="'
+                 .. cellStyle ..'">\n'
+    return string .. '      </table:table-cell>\n'
+  end,
 }
+
+M.row = function(cellStyle, pStyle, row)
+  local string='    <table:table-row>\n'
+  for i, el in pairs(row.cells) do
+    string = string .. M.cell(cellStyle, pStyle, el)
+  end
+  return string .. '    </table:table-row>'
+end
 
 --------------------------------------------------------------------------------
 -- Main Writer function
@@ -32,6 +60,7 @@ local M = {
 -- Writer is OK for flat opendocument (content.xml)
 --------------------------------------------------------------------------------
 function ByteStringWriter (doc, opts)
+  local tableCount = newCounter()
   --
   -- Accessory filter used to write BlockQuote which can contain Para and Plain
   -- blocks (Plain blocks are for tight list items)
@@ -52,7 +81,7 @@ function ByteStringWriter (doc, opts)
     Plain = function(block)
       --[[
       debug("---------------")
-      debug(block.content)
+      debug(block)
       debug("---------------")
       --]]
       return M.p("Quotations_20_tight",
@@ -63,14 +92,16 @@ function ByteStringWriter (doc, opts)
   }
   --
   -- Accessory filter used to build table captions
-  -- TODO: - keep a counter to set the right table number since LibreOffice
-  -- doesn't recalculate when opening the document (need to press 'F9' key)
-  --       - Use it also to build 'refTable0' index (and table name later)
   --
   local filterTC = {
     Plain = function(block)
-      return M.p("Table", 'Table <text:sequence text:ref-name="refTable0" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">1</text:sequence>: ' ..
-                      pandoc.write(pandoc.Pandoc({block}), 'opendocument')
+      return M.p("Table",
+                  'Table <text:sequence text:ref-name="refTable'
+                  .. tableCount.current()
+                  .. '" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">'
+                  .. tableCount.current()
+                  .. '</text:sequence>: ' ..
+                  pandoc.write(pandoc.Pandoc({block}), 'opendocument')
                       :match('^<text:p[^>]+>(.*)</text:p>$')
       )
     end,
@@ -149,20 +180,62 @@ function ByteStringWriter (doc, opts)
     --
     -- Tables
     Table = function(table)
+      tableCount.count()
+      debug('================')
+      debug(tableCount.current())
+
+      local rList
+      -- Process table caption if any
       if table.caption.long then
-        local rList = table.caption.long:walk(filterTC) .. {table}
-        debug('================')
-        debug(rList)
-        debug('================')
+        rList = table.caption.long:walk(filterTC)
         table.caption.long = nil
-        debug(pandoc.write(pandoc.Pandoc({table}), 'opendocument')
-              :gsub('^(<table:table [^>]*style-name)','%1DefaultTable'))
-              --:gsub('^(<table:table .*table:style-name=)"%w*"','%1"DefaultTable"'))
-        debug('================')
-        return rList
       else
-        return table
+        rList = {}
       end
+
+      debug(table)
+      --[[
+      -- Start table
+      rList = rList .. List:new{pandoc.RawBlock('opendocument',
+      --]]
+      debug('<table:table table:name="Table'
+              .. tableCount.current()
+              .. '" table:style-name="DefaultTable">')
+      -- Process column specifications : alignment and width
+      --debug(table.colspecs)
+      for i, colspec in pairs(table.colspecs) do
+        --debug(" " .. i .. " " .. colspec[1]) --ColWidthDefault is nil ???
+        debug('  <table:table-column table:style-name="Table'
+                 .. colspec[1] .. '" />')
+      end
+      -- Process TableHead rows
+      if(table.head) then
+        debug('  <table:table-header-rows>')
+        for i, row in pairs(table.head.rows) do
+          debug(M.row('TableHeaderRowCell', 'Table_20_Heading', row))
+        end
+        debug('  </table:table-header-rows>')
+      end
+      -- Process TableBody rows
+      -- Process TableFoot rows
+      --[[
+      -- End table
+      rList = rList .. List:new{pandoc.RawBlock('opendocument',
+      --]]
+      debug('</table:table>')
+
+      debug('================')
+      local sss=pandoc.write(pandoc.Pandoc({table}), 'opendocument')
+            :gsub('^(<[^>]*=")[^"]*','%1DefaultTable')
+      debug('================')
+      debug(sss)
+      debug('================')
+      rList = rList .. List:new{pandoc.RawBlock('opendocument', sss)}
+
+      debug(rList)
+      debug('================')
+
+      return rList
     end,
     --
     -- Inline styles

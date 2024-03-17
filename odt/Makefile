@@ -20,6 +20,8 @@ pandoc-reference.odt: README.md
 	pandoc -o pandoc-reference.odt --print-default-data-file reference.odt
 
 %.pdf: %.md
+	$(PANDOC) --standalone --pdf-engine=pdflatex -o "$@" "$<"
+
 %.pdf: %.native
 	$(PANDOC) --standalone --pdf-engine=pdflatex -o "$@" "$<"
 
