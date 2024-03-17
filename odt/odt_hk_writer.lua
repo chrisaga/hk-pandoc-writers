@@ -119,63 +119,31 @@ function ByteStringWriter (doc, opts)
     end,
   }
   --
-  -- Main filter used to write blocks and inlines in xml odt
+  -- First filter used to process inlines and structures like Tables, BlockQuotes...
   --
-  local filter = {
-    -- Lists : list items are Para blocks in loose lists and Plain blocks in
-    --         tight lists.
+  local filterI = {
     --
-    -- Bullet Lists
-    BulletList = function(list)
-      --[[
-      debug("---------------")
-      debug(list.content)
-      debug("---------------")
-      --]]
-      local rList = List:new{pandoc.RawBlock('opendocument',
-                             '<text:list text:style-name="List_20_2">')}
-      for i, el in pairs(list.content) do
-        rList = rList
-            .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
-            .. el
-            .. List:new{pandoc.RawBlock('opendocument','</text:list-item>')}
-      end
-      rList = rList .. List:new{pandoc.RawBlock('opendocument',
-                                                '</text:list>')}
-      return rList
+    -- Inline styles
+    Emph = function(el)
+      return M.span('Emphasis', el.content)
     end,
-    --
-    -- Ordered Lists
-    OrderedList = function(list)
-      --[[
-      debug("---------------")
-      debug(list.content)
-      debug("---------------")
-      --]]
-      local rList = List:new{pandoc.RawBlock('opendocument',
-                          '<text:list text:style-name="Numbering_20_123">')}
-      for i, el in pairs(list.content) do
-        rList = rList
-            .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
-            .. el
-            .. List:new{pandoc.RawBlock('opendocument','</text:list-item>')}
-        debug('[' .. tostring(i) .. ']' .. pandoc.utils.stringify(el))
-      end
-      rList = rList .. List:new{pandoc.RawBlock('opendocument',
-                                                '</text:list>')}
-
-      --debug(rList)
-      return rList
+    Strikeout = function(el)
+      return M.span('Strikeout', el.content)
     end,
-    --
-    -- BlockQuote
-    BlockQuote = function(block)
-      return pandoc.walk_block(block, filterBQ)
+    Strong = function(el)
+      return M.span('Strong_20_Emphasis', el.content)
     end,
-    --
-    -- Plain (default writer makes them paragraphs)
-    Plain = function(block)
-      return block
+    Subscript = function(el)
+      return M.span('Subscript', el.content)
+    end,
+    Superscript = function(el)
+      return M.span('Superscript', el.content)
+    end,
+    Underline = function(el)
+      return M.span('Underline', el.content)
+    end,
+    SmallCaps = function(el)
+      return M.span('SmallCaps', el.content)
     end,
     --
     -- Tables
@@ -237,34 +205,71 @@ function ByteStringWriter (doc, opts)
 
       return rList
     end,
+  }
+  --
+  -- Main filter used to write blocks in xml odt
+  --
+  local filter = {
+    -- Lists : list items are Para blocks in loose lists and Plain blocks in
+    --         tight lists.
     --
-    -- Inline styles
-    Emph = function(el)
-      return M.span('Emphasis', el.content)
+    -- Bullet Lists
+    BulletList = function(list)
+      --[[
+      debug("---------------")
+      debug(list.content)
+      debug("---------------")
+      --]]
+      local rList = List:new{pandoc.RawBlock('opendocument',
+                             '<text:list text:style-name="List_20_2">')}
+      for i, el in pairs(list.content) do
+        rList = rList
+            .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
+            .. el
+            .. List:new{pandoc.RawBlock('opendocument','</text:list-item>')}
+      end
+      rList = rList .. List:new{pandoc.RawBlock('opendocument',
+                                                '</text:list>')}
+      return rList
     end,
-    Strikeout = function(el)
-      return M.span('Strikeout', el.content)
+    --
+    -- Ordered Lists
+    OrderedList = function(list)
+      --[[
+      debug("---------------")
+      debug(list.content)
+      debug("---------------")
+      --]]
+      local rList = List:new{pandoc.RawBlock('opendocument',
+                          '<text:list text:style-name="Numbering_20_123">')}
+      for i, el in pairs(list.content) do
+        rList = rList
+            .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
+            .. el
+            .. List:new{pandoc.RawBlock('opendocument','</text:list-item>')}
+        debug('[' .. tostring(i) .. ']' .. pandoc.utils.stringify(el))
+      end
+      rList = rList .. List:new{pandoc.RawBlock('opendocument',
+                                                '</text:list>')}
+
+      --debug(rList)
+      return rList
     end,
-    Strong = function(el)
-      return M.span('Strong_20_Emphasis', el.content)
+    --
+    -- BlockQuote
+    BlockQuote = function(block)
+      return pandoc.walk_block(block, filterBQ)
     end,
-    Subscript = function(el)
-      return M.span('Subscript', el.content)
-    end,
-    Superscript = function(el)
-      return M.span('Superscript', el.content)
-    end,
-    Underline = function(el)
-      return M.span('Underline', el.content)
-    end,
-    SmallCaps = function(el)
-      return M.span('SmallCaps', el.content)
+    --
+    -- Plain (default writer makes them paragraphs)
+    Plain = function(block)
+      return block
     end,
 
   } -- end of main filter
 
   -- write with the default writer and the filter
-  return pandoc.write(doc:walk(filter):walk(filterF), 'odt', opts)
+  return pandoc.write(doc:walk(filterI):walk(filter):walk(filterF), 'odt', opts)
 end -- of main writer function
 
 --------------------------------------------------------------------------------
