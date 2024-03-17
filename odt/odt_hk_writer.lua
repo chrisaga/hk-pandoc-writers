@@ -71,12 +71,19 @@ end
 
 local M = {
   span = function(style, content)
-    -- TODO: See if wee want to return a single RawInline
-    return List:new{pandoc.RawInline('opendocument',
+    if(type(content) == 'string') then
+      return List:new{pandoc.RawInline('opendocument',
+                          '<text:span text:style-name="'
+                          .. style .. '">'
+                .. content
+                .. '</text:span>')}
+    else
+      return List:new{pandoc.RawInline('opendocument',
                           '<text:span text:style-name="'
                           .. style .. '">')}
                 .. content
                 .. List:new{pandoc.RawInline('opendocument','</text:span>')}
+    end
   end,
   p = function(style, content)
     -- TODO: See if wee need to accept Inline contents
@@ -190,6 +197,10 @@ function ByteStringWriter (doc, opts)
     end,
     SmallCaps = function(el)
       return M.span('SmallCaps', el.content)
+    end,
+    Code = function(el)
+      debug(el)
+      return M.span('Source_Text', el.text)
     end,
     Quoted = function(el)
       -- TODO: localize quotes
