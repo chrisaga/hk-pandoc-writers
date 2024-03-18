@@ -453,13 +453,43 @@
       <number:text-content/>
     </number:text-style>
     <!-- Table styles and templates -->
-    <style:style style:name="Table_20_Heading"
-      style:display-name="Table Heading" style:family="paragraph"
-      style:parent-style-name="Standard" style:class="text">
-    </style:style>
     <style:style style:name="Table_20_Contents"
       style:display-name="Table Contents" style:family="paragraph"
+      style:parent-style-name="Standard" style:class="text">
+    </style:style>
+    <style:style style:name="Table_20_Contents_20_AlignLeft"
+      style:display-name="Table Contents Left Aligned" style:family="paragraph"
+      style:parent-style-name="Table_20_Contents" style:class="text">
+      <style:paragraph-properties fo:text-align="left" style:justify-single-word="false"/>
+    </style:style>
+    <style:style style:name="Table_20_Contents_20_AlignRight"
+      style:display-name="Table Contents Right Aligned" style:family="paragraph"
+      style:parent-style-name="Table_20_Contents" style:class="text">
+      <style:paragraph-properties fo:text-align="right" style:justify-single-word="false"/>
+    </style:style>
+    <style:style style:name="Table_20_Contents_20_AlignCenter"
+      style:display-name="Table Contents Centered" style:family="paragraph"
+      style:parent-style-name="Table_20_Contents" style:class="text">
+      <style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/>
+    </style:style>
+    <style:style style:name="Table_20_Heading"
+      style:display-name="Table Heading" style:family="paragraph"
+      style:parent-style-name="Table_20_Contents" style:class="text">
+    </style:style>
+    <style:style style:name="Table_20_Heading_20_AlignLeft"
+      style:display-name="Table Heading Left Aligned" style:family="paragraph"
       style:parent-style-name="Table_20_Heading" style:class="text">
+      <style:paragraph-properties fo:text-align="left" style:justify-single-word="false"/>
+    </style:style>
+    <style:style style:name="Table_20_Heading_20_AlignRight"
+      style:display-name="Table Heading Right Aligned" style:family="paragraph"
+      style:parent-style-name="Table_20_Heading" style:class="text">
+      <style:paragraph-properties fo:text-align="right" style:justify-single-word="false"/>
+    </style:style>
+    <style:style style:name="Table_20_Heading_20_AlignCenter"
+      style:display-name="Table Heading Centered" style:family="paragraph"
+      style:parent-style-name="Table_20_Heading" style:class="text">
+      <style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/>
     </style:style>
     <style:style style:name="Table.Head" style:family="table-cell"
       style:data-style-name="NenUS">

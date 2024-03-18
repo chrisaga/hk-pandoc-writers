@@ -23,7 +23,9 @@ end
 -- Style to be included as so called "automatic-styles" in the document's
 -- content itself. This is needed due to Libre Office's poor table styling system
 --------------------------------------------------------------------------------
--- TODO:adjust padding value
+-- TODO: adjust padding value
+-- TODO: check if some inheritance from styles in the reference docis possible
+-- style:parent-style-name attribute
 local astyles = [[
 <style:style style:name="DefaultTable" style:family="table">
   <style:table-properties
@@ -64,6 +66,18 @@ local astyles = [[
    fo:border-top="none" fo:border-bottom="0.5pt solid #000000"/>
 </style:style>
 ]]
+local tableContentsStyles = {
+  AlignDefault = 'Table_20_Contents',
+  AlignLeft = 'Table_20_Contents_20_AlignLeft',
+  AlignRight = 'Table_20_Contents_20_AlignRight',
+  AlignCenter = 'Table_20_Contents_20_AlignCenter',
+}
+local tableHeadingStyles = {
+  AlignDefault = 'Table_20_Heading',
+  AlignLeft = 'Table_20_Heading_20_AlignLeft',
+  AlignRight = 'Table_20_Heading_20_AlignRight',
+  AlignCenter = 'Table_20_Heading_20_AlignCenter',
+}
 --------------------------------------------------------------------------------
 -- Accessory functions used to build odt xml content (might be a Lua module)
 --------------------------------------------------------------------------------
@@ -142,20 +156,23 @@ local M = {
                   .. List:new{pandoc.RawBlock('opendocument','</text:p>')}
     end
   end,
-  cell = function(cellStyle, pStyle, cell)
+  cell = function(cellStyle, pStyle, tableStyles, cell)
     local string='      <table:table-cell table:style-name="'
                  .. cellStyle
                  ..'" office:value-type="string">\n        <text:p text:style-name="'
-                 .. pStyle .. '">'
+                 .. (cell.alignment == 'AlignDefault' and pStyle
+                                      or tableStyles[cell.alignment])
+                 .. '">'
                  .. myWriter.Blocks(cell.content)
-    return string .. '</text:p>\n      </table:table-cell>\n'
+                 .. '</text:p>\n      </table:table-cell>\n'
+    return string
   end,
 }
 
-M.row = function(cellStyle, pStyle, row)
+M.row = function(cellStyle, pStyles, tableStyles, row)
   local string='    <table:table-row>\n'
   for i, el in pairs(row.cells) do
-    string = string .. M.cell(cellStyle, pStyle, el)
+    string = string .. M.cell(cellStyle, pStyles[i], tableStyles, el)
   end
   return string .. '    </table:table-row>'
 end
@@ -251,6 +268,8 @@ function ByteStringWriter (doc, opts)
     -- Tables
     Table = function(table)
       tableCount.count()
+      local  pStylesHeading= {}
+      local  pStylesContents= {}
 
       local rList
       -- Process table caption if any
@@ -274,21 +293,23 @@ function ByteStringWriter (doc, opts)
               .. tableCount.current()
               .. '" table:style-name="DefaultTable">\n'
       -- Process column specifications : alignment and width
-      --debug(table.colspecs)
-      -- TODO: text alignment in colum style doesn't work =>
-      -- memorize it and set text style for each cell
+      -- TODO: process width
       for i, colspec in pairs(table.colspecs) do
         --debug(" " .. i .. " " .. colspec[1]) --ColWidthDefault is nil ???
         tableString = tableString
                       .. '  <table:table-column table:style-name="Table'
                       .. colspec[1] .. '" />\n'
+        -- build list of paragraph styles based on text alignment for each column
+        pStylesContents[i]=tableContentsStyles[colspec[1]]
+        pStylesHeading[i]=tableHeadingStyles[colspec[1]]
       end
       -- Process TableHead rows
       if(table.head) then
         tableString = tableString .. '  <table:table-header-rows>\n'
         for i, row in pairs(table.head.rows) do
           tableString = tableString
-                        .. M.row('TableHeaderRowCell', 'Table_20_Heading', row)
+                        .. M.row('TableHeaderRowCell', pStylesHeading,
+                                  tableHeadingStyles, row)
                         .. '\n'
         end
         tableString = tableString  .. '  </table:table-header-rows>\n'
@@ -305,8 +326,9 @@ function ByteStringWriter (doc, opts)
               cellStyle='TableBottomRowCell'
             end
             tableString = tableString
-                          .. M.row(cellStyle, 'Table_20_Contents', row)
-                        .. '\n'
+                          .. M.row(cellStyle, pStylesContents,
+                                   tableContentsStyles, row)
+                          .. '\n'
           end
         end
       end
