@@ -36,19 +36,19 @@ local astyles = [[
   </style:table-properties>
 </style:style>
 <style:style style:name="TableAlignLeft" style:family="table-column">
-  <style:table-column-properties style:use-optimal-column-width"true"/>
+  <style:table-column-properties style:use-optimal-column-width="true"/>
   <style:paragraph-properties fo:text-align="left"/>
 </style:style>
 <style:style style:name="TableAlignCenter" style:family="table-column">
-  <style:table-column-properties style:use-optimal-column-width"true"/>
+  <style:table-column-properties style:use-optimal-column-width="true"/>
   <style:paragraph-properties fo:text-align="center"/>
 </style:style>
 <style:style style:name="TableAlignRight" style:family="table-column">
-  <style:table-column-properties style:use-optimal-column-width"true"/>
+  <style:table-column-properties style:use-optimal-column-width="true"/>
   <style:paragraph-properties fo:text-align="right"/>
 </style:style>
 <style:style style:name="TableAlignDefault" style:family="table-column">
-  <style:table-column-properties style:use-optimal-column-width"true"/>
+  <style:table-column-properties style:use-optimal-column-width="true"/>
 </style:style>
 <style:style style:name="TableHeaderRowCell" style:family="table-cell">
   <style:table-cell-properties fo:padding="0.1cm"
