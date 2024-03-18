@@ -20,6 +20,51 @@ function newCounter()
   }
 end
 --------------------------------------------------------------------------------
+-- Style to be included as so called "automatic-styles" in the document's
+-- content itself. This is needed due to Libre Office's poor table styling system
+--------------------------------------------------------------------------------
+-- TODO:adjust padding value
+local astyles = [[
+<style:style style:name="DefaultTable" style:family="table">
+  <style:table-properties
+    style:rel-width="80%"
+    style:may-break-between-rows="false"
+    fo:margin-top="0cm" fo:margin-bottom="0.5cm"
+    table:align="center" fo:background-color="transparent">
+    <!-- oasis doc says that style:width is mandatory.-->
+    <style:background-image/>
+  </style:table-properties>
+</style:style>
+<style:style style:name="TableAlignLeft" style:family="table-column">
+  <style:table-column-properties style:use-optimal-column-width"true"/>
+  <style:paragraph-properties fo:text-align="left"/>
+</style:style>
+<style:style style:name="TableAlignCenter" style:family="table-column">
+  <style:table-column-properties style:use-optimal-column-width"true"/>
+  <style:paragraph-properties fo:text-align="center"/>
+</style:style>
+<style:style style:name="TableAlignRight" style:family="table-column">
+  <style:table-column-properties style:use-optimal-column-width"true"/>
+  <style:paragraph-properties fo:text-align="right"/>
+</style:style>
+<style:style style:name="TableAlignDefault" style:family="table-column">
+  <style:table-column-properties style:use-optimal-column-width"true"/>
+</style:style>
+<style:style style:name="TableHeaderRowCell" style:family="table-cell">
+  <style:table-cell-properties fo:padding="0.1cm"
+   fo:border-left="none" fo:border-right="none"
+   fo:border-top="0.5pt solid #000000" fo:border-bottom="0.5pt solid #000000"/>
+</style:style>
+<style:style style:name="TableRowCell" style:family="table-cell">
+  <style:table-cell-properties fo:padding="0.1cm" fo:border="none"/>
+</style:style>
+<style:style style:name="TableBottomRowCell" style:family="table-cell">
+  <style:table-cell-properties fo:padding="0.1cm"
+   fo:border-left="none" fo:border-right="none"
+   fo:border-top="none" fo:border-bottom="0.5pt solid #000000"/>
+</style:style>
+]]
+--------------------------------------------------------------------------------
 -- Accessory functions used to build odt xml content (might be a Lua module)
 --------------------------------------------------------------------------------
 local myWriter = pandoc.scaffolding.Writer
@@ -34,10 +79,7 @@ end
 myWriter.Blocks = function(blocks) -- Why is this necessary ?
   local string = ''
   for i, el in pairs(blocks) do
-    --debug(el)
-    --s=myWriter.Block(el)
     string = string .. myWriter.Block(el)
-    --string = string .. s
   end
   return tostring(string)
 end
@@ -143,25 +185,6 @@ function ByteStringWriter (doc, opts)
     end,
   }
   --
-  -- Accessory filter used to build table captions
-  --
-  --[[
-  local filterTC = {
-    Plain = function(block)
-      return M.p("Table",
-                  'Table <text:sequence text:ref-name="refTable'
-                  .. tableCount.current()
-                  .. '" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">'
-                  .. tableCount.current()
-                  .. '</text:sequence>: ' ..
-                  pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-                      :match('^<text:p[^>]+>(.*)</text:p>$')
-      )
-    end,
-  }
-  filterTC.Para = filterTC.Plain -- in case someday the caption is a Para
-  --]]
-  --
   -- Accessory filter used to polish stuf just before writing
   --
   local filterF = {
@@ -175,6 +198,14 @@ function ByteStringWriter (doc, opts)
   -- First filter used to process inlines and structures like Tables, BlockQuotes...
   --
   local filterI = {
+    --
+    -- Metadata
+    Meta = function(meta)
+      -- TODO: test if the meta is passed via another way
+      meta['automatic-styles']=pandoc.MetaBlocks(
+                List:new{pandoc.RawBlock('opendocument',astyles)})
+      return meta
+    end,
     --
     -- Inline styles
     Emph = function(el)
@@ -244,9 +275,12 @@ function ByteStringWriter (doc, opts)
               .. '" table:style-name="DefaultTable">\n'
       -- Process column specifications : alignment and width
       --debug(table.colspecs)
+      -- TODO: text alignment in colum style doesn't work =>
+      -- memorize it and set text style for each cell
       for i, colspec in pairs(table.colspecs) do
         --debug(" " .. i .. " " .. colspec[1]) --ColWidthDefault is nil ???
-        tableString = tableString .. '  <table:table-column table:style-name="Table'
+        tableString = tableString
+                      .. '  <table:table-column table:style-name="Table'
                       .. colspec[1] .. '" />\n'
       end
       -- Process TableHead rows
@@ -260,31 +294,39 @@ function ByteStringWriter (doc, opts)
         tableString = tableString  .. '  </table:table-header-rows>\n'
       end
       -- Process TableBody rows
+      local cellStyle=''
+      local body
       if(table.bodies) then
-        for i, body in pairs(table.bodies) do
-          for r, row in pairs(body.body) do
+        for i, b in pairs(table.bodies) do
+          cellStyle='TableRowCell'
+          body=b.body
+          for r, row in pairs(body) do
+            if r == #body then
+              cellStyle='TableBottomRowCell'
+            end
             tableString = tableString
-                          .. M.row('TableRowCell', 'Table_20_Contents', row)
+                          .. M.row(cellStyle, 'Table_20_Contents', row)
                         .. '\n'
           end
         end
       end
       -- Process TableFoot rows
+      -- TODO
 
       tableString = tableString .. '</table:table>'
       -- use Pandoc's writer to get the table done
       --debug(table)
+      --[[
       local sss=pandoc.write(pandoc.Pandoc({table}), 'opendocument')
             :gsub('^(<[^>]*=")[^"]*','%1DefaultTable')
-      --[[
       --debug('================')
       --debug(tableString)
       debug('================')
       debug(sss)
       debug('================')
       --]]
-      rList = rList .. List:new{pandoc.RawBlock('opendocument', sss)}
-      --rList = rList .. List:new{pandoc.RawBlock('opendocument', tableString)}
+      --rList = rList .. List:new{pandoc.RawBlock('opendocument', sss)}
+      rList = rList .. List:new{pandoc.RawBlock('opendocument', tableString)}
 
       --debug(rList)
       --debug('================')

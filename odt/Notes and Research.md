@@ -262,3 +262,4 @@ Tables
 Globally tables in Libre Office are shitty. Styles are not really styles. Styles in `styles.xml` are ignored.
 
 You can only use so called "automatic-styles" in `content.xml`.
+Those styles can be set via the template variable `$automatic-styles$` (template `open document` or `odt`).

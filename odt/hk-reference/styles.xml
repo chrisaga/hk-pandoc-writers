@@ -72,6 +72,9 @@
     <style:default-style style:family="table-row">
       <style:table-row-properties fo:keep-together="auto"/>
     </style:default-style>
+    <style:default-style style:family="table-cell">
+      <style:table-cell-properties fo:padding="0.5cm"/>
+    </style:default-style>
     <!-- Standard : standard text paragraph parent of other styles like
     Text body -->
     <style:style style:name="Standard" style:family="paragraph"
@@ -458,16 +461,6 @@
       style:display-name="Table Contents" style:family="paragraph"
       style:parent-style-name="Table_20_Heading" style:class="text">
     </style:style>
-    <style:style style:name="DefaultTable" style:family="table">
-      <style:table-properties
-        style:width="13.6cm" style:rel-width="80%"
-        fo:margin-top="0cm" fo:margin-bottom="0.5cm"
-        table:align="center" fo:background-color="transparent">
-        <!-- oasis doc says that width is mandatory.
-             How does the relative-width works? -->
-        <style:background-image/>
-      </style:table-properties>
-    </style:style>
     <style:style style:name="Table.Head" style:family="table-cell"
       style:data-style-name="NenUS">
       <style:table-cell-properties
@@ -479,9 +472,6 @@
         fo:font-weight="bold" fo:font-style="normal"
         style:font-weight-asian="bold" style:font-style-asian="normal"
         style:font-weight-complex="bold" style:font-style-complex="normal"/>
-    </style:style>
-    <style:style style:name="TableHeaderRowCell" style:family="table-cell">
-      <style:table-cell-properties fo:padding="0.049cm" fo:border-left="none" fo:border-right="none" fo:border-top="0.5pt solid #000000" fo:border-bottom="0.5pt solid #000000"/>
     </style:style>
     <style:style style:name="Table.Foot" style:family="table-cell"
       style:data-style-name="NenUS">
@@ -498,7 +488,7 @@
     <!--table:table-template table:name="Pandoc Table" table:first-row-end-column="row" table:first-row-start-column="row" table:last-row-end-column="row" table:last-row-start-column="row"-->
     <!-- deprecated attributes -->
     <table:table-template table:name="TableWithHeader">
-      <table:first-row table:style-name="TableHeaderRowCell"/>
+      <table:first-row table:style-name="Table.Head"/>
       <table:last-row table:style-name="Table.Foot"/>
       <table:body table:style-name="Table.Body"/>
     </table:table-template>
