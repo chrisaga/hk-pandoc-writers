@@ -98,6 +98,15 @@ myWriter.Blocks = function(blocks) -- Why is this necessary ?
   return tostring(string)
 end
 
+myWriter.Inline.Link = function(el)
+      -- TODO: check style name
+  return '<text:a xlink:type="simple" xlink:href="'
+             .. el.target
+             .. '" office:name="">'
+             .. myWriter.Inlines(el.content)
+             .. '</text:a>'
+end
+
 myWriter.Inline.RawInline = function(inline)
   return inline.text
 end
