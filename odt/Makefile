@@ -25,11 +25,14 @@ pandoc-reference.odt: README.md
 %.pdf: %.native
 	$(PANDOC) --standalone --pdf-engine=pdflatex -o "$@" "$<"
 
+%.html: %.native
+	$(PANDOC) --standalone -o "$@" "$<"
+
 %.latex: %.md
 	$(PANDOC) --standalone -o "$@" "$<"
 
-%.ast: %.md
-	$(PANDOC) -w native -o "$@" "$<"
+%.native: %.md
+	$(PANDOC) -o "$@" "$<"
 
 %.odt: %.md
 	$(PANDOC) --standalone --reference-doc=hk-reference.odt --write=odt_hk_writer.lua -o "$@" "$<"

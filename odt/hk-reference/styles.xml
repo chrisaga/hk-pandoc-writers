@@ -573,10 +573,27 @@
     <style:style style:name="SmallCaps" style:family="text">
       <style:text-properties fo:font-variant="small-caps" />
     </style:style>
+    <style:style style:name="Internet_20_link"
+      style:display-name="Internet link" style:family="text">
+      <style:text-properties fo:color="#000080"
+        loext:opacity="100%" style:text-underline-style="solid"
+        style:text-underline-width="auto"
+        style:text-underline-color="font-color"/>
+    </style:style>
+    <style:style style:name="Visited_20_Internet_20_Link"
+      style:display-name="Visited Internet Link" style:family="text"
+      style:parent-style-name="Internet_20_link">
+      <style:text-properties fo:color="#800000" />
+    </style:style>
     <!-- End of HK styles -->
-    <text:notes-configuration text:note-class="footnote" style:num-format="1" text:start-value="0" text:footnotes-position="page" text:start-numbering-at="document"/>
-    <text:notes-configuration text:note-class="endnote" style:num-format="i" text:start-value="0"/>
-    <text:linenumbering-configuration text:number-lines="false" text:offset="0.499cm" style:num-format="1" text:number-position="left" text:increment="5"/>
+    <text:notes-configuration text:note-class="footnote" style:num-format="1"
+      text:start-value="0" text:footnotes-position="page"
+      text:start-numbering-at="document"/>
+    <text:notes-configuration text:note-class="endnote" style:num-format="i"
+      text:start-value="0"/>
+    <text:linenumbering-configuration text:number-lines="false"
+      text:offset="0.499cm" style:num-format="1" text:number-position="left"
+      text:increment="5"/>
   </office:styles>
   <office:automatic-styles>
     <style:page-layout style:name="Mpm1">

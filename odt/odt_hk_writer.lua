@@ -19,6 +19,7 @@ function newCounter()
     end,
   }
 end
+  local ftnCount = newCounter()
 --------------------------------------------------------------------------------
 -- Style to be included as so called "automatic-styles" in the document's
 -- content itself. This is needed due to Libre Office's poor table styling system
@@ -101,10 +102,28 @@ end
 myWriter.Inline.Link = function(el)
       -- TODO: check style name
   return '<text:a xlink:type="simple" xlink:href="'
-             .. el.target
-             .. '" office:name="">'
+             .. el.target:gsub('&', '&amp;')
+             .. '" text:style-name="Internet_20_link" text:visited-style-name="Visited_20_Internet_20_Link">'
              .. myWriter.Inlines(el.content)
              .. '</text:a>'
+end
+
+myWriter.Inline.Note = function(el)
+  return '<text:note text:id="ftn'
+  .. tostring(ftnCount.current())
+  .. '" text:note-class="footnote"><text:note-citation>'
+  .. tostring(ftnCount.count())
+  .. '</text:note-citation><text:note-body><text:p text:style-name="Footnote">'
+  .. myWriter.Blocks(el.content)
+  .. '</text:p></text:note-body></text:note>'
+end
+
+myWriter.Inline.Math = function (el)
+  return el.text
+end
+
+myWriter.Inline.Image = function (el)
+  return '[Image not supported yet]'
 end
 
 myWriter.Inline.RawInline = function(inline)
@@ -112,7 +131,11 @@ myWriter.Inline.RawInline = function(inline)
 end
 
 myWriter.Inline.Str = function (str)
-  return str.text
+  if(type(str) == 'string') then
+    return str:gsub('<', '&lt;'):gsub('&', '&amp;')
+  else
+    return str.text:gsub('<', '&lt;'):gsub('&', '&amp;')
+  end
 end
 
 myWriter.Inline.Space = function ()
@@ -132,6 +155,16 @@ end
 --]]
 myWriter.Block.Plain = function(block)
   return myWriter.Inlines(block.content)
+end
+
+myWriter.Block.Para = function(block)
+  return '<text:p text:style-name="Text_20_body">'
+         .. myWriter.Inlines(block.content)
+         .. '</text:p>'
+end
+
+myWriter.Block.RawBlock = function(block)
+  return block.text
 end
 
 local M = {
@@ -256,20 +289,25 @@ function ByteStringWriter (doc, opts)
       return M.span('SmallCaps', el.content)
     end,
     Code = function(el)
-      return M.span('Source_Text', el.text)
+      return M.span('Source_Text', myWriter.Inline.Str(el.text))
     end,
     Quoted = function(el)
       -- TODO: localize quotes
       if el.quotetype == 'DoubleQuote' then
+        --debug(el.content)
+        --debug('“' .. myWriter.Inlines(el.content) ..'”')
         return pandoc.RawInline('opendocument',
                                  '“' .. myWriter.Inlines(el.content) ..'”')
       else
+        --debug(el.content)
+        --debug('‘' .. myWriter.Inlines(el.content) ..'’')
         return pandoc.RawInline('opendocument',
                                  '‘' .. myWriter.Inlines(el.content) ..'’')
       end
     end,
     --
     -- Inline elements
+    -- TODO: check ! Is this a hard break ?
     SoftBreak = function()
       return pandoc.RawInline('opendocument','<text:line-break/>')
     end,
