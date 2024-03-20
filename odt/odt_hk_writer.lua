@@ -163,6 +163,10 @@ myWriter.Block.Para = function(block)
          .. '</text:p>'
 end
 
+myWriter.Block.HorizontalRule = function()
+  return '<text:p text:style-name="Horizontal_20_Line/">'
+end
+
 myWriter.Block.RawBlock = function(block)
   return block.text
 end
@@ -466,7 +470,6 @@ function ByteStringWriter (doc, opts)
   } -- end of main filter
 
   -- write with the default writer and the filter
-  --debug(doc)
   return pandoc.write(doc:walk(filterI):walk(filter):walk(filterF), 'odt', opts)
 end -- of main writer function
 

@@ -33,6 +33,7 @@
   <office:font-face-decls>
     <style:font-face style:name="Liberation Sans" svg:font-family="'Liberation Sans'" style:font-family-generic="swiss" style:font-pitch="variable"/>
     <style:font-face style:name="Liberation Serif" svg:font-family="'Liberation Serif'" style:font-family-generic="roman" style:font-pitch="variable"/>
+    <style:font-face style:name="Liberation Mono" svg:font-family="'Liberation Mono'" style:font-family-generic="modern" style:font-pitch="fixed"/>
     <style:font-face style:name="Noto Sans CJK SC" svg:font-family="'Noto Sans CJK SC'" style:font-family-generic="system" style:font-pitch="variable"/>
     <style:font-face style:name="Noto Sans Devanagari" svg:font-family="'Noto Sans Devanagari'" style:font-family-generic="swiss"/>
     <style:font-face style:name="Noto Sans Devanagari1" svg:font-family="'Noto Sans Devanagari'" style:font-family-generic="system" style:font-pitch="variable"/>
@@ -296,13 +297,25 @@
     style:display-name="Preformatted Text" style:family="paragraph"
     style:parent-style-name="Standard" style:class="html">
       <style:paragraph-properties fo:margin-top="0in"
-      fo:margin-bottom="0in" style:contextual-spacing="false" />
-      <style:text-properties style:font-name="Courier New"
-      fo:font-size="10pt" style:font-name-asian="Courier New"
-      style:font-size-asian="10pt"
-      style:font-name-complex="Courier New"
-      style:font-size-complex="10pt"
-      fo:language="zxx" />
+        fo:margin-bottom="0cm" style:contextual-spacing="false" />
+      <!--style:text-properties style:font-name="Courier New"
+        fo:font-size="10pt" style:font-name-asian="Courier New"
+        style:font-size-asian="10pt"
+        style:font-name-complex="Courier New"
+        style:font-size-complex="10pt"
+        fo:language="zxx" /-->
+      <style:text-properties style:font-name="Liberation Mono"
+        fo:font-family="'Liberation Mono'" style:font-family-generic="modern"
+        style:font-pitch="fixed" fo:font-size="10pt"
+        fo:language="zxx"
+        style:font-name-asian="Noto Sans Mono CJK SC"
+        style:font-family-asian="'Noto Sans Mono CJK SC'"
+        style:font-family-generic-asian="modern" style:font-pitch-asian="fixed"
+        style:font-size-asian="10pt"
+        style:font-name-complex="Liberation Mono"
+        style:font-family-complex="'Liberation Mono'"
+        style:font-family-generic-complex="modern"
+        style:font-pitch-complex="fixed" style:font-size-complex="10pt"/>
     </style:style>
     <!-- HK numbered list style -->
     <text:list-style style:name="Numbering_20_123"
@@ -584,6 +597,16 @@
       style:display-name="Visited Internet Link" style:family="text"
       style:parent-style-name="Internet_20_link">
       <style:text-properties fo:color="#800000" />
+    </style:style>
+    <style:style style:name="Horizontal_20_Line"
+      style:display-name="Horizontal Line" style:family="paragraph"
+      style:parent-style-name="Standard" style:next-style-name="Text_20_body"
+      style:class="html">
+      <style:paragraph-properties fo:margin-top="0cm"
+        fo:margin-bottom="0.499cm" style:contextual-spacing="false"
+        fo:padding="0cm" fo:border-left="none" fo:border-right="none"
+        fo:border-top="none" fo:border-bottom="0.5pt solid #000000"
+        text:number-lines="false" text:line-number="0" style:join-border="false"/>
     </style:style>
     <!-- End of HK styles -->
     <text:notes-configuration text:note-class="footnote" style:num-format="1"
