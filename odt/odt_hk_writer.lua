@@ -132,9 +132,9 @@ end
 
 myWriter.Inline.Str = function (str)
   if(type(str) == 'string') then
-    return str:gsub('<', '&lt;'):gsub('&', '&amp;')
+    return str:gsub('&', '&amp;'):gsub('<', '&lt;')
   else
-    return str.text:gsub('<', '&lt;'):gsub('&', '&amp;')
+    return str.text:gsub('&', '&amp;'):gsub('<', '&lt;')
   end
 end
 
@@ -165,6 +165,32 @@ end
 
 myWriter.Block.HorizontalRule = function()
   return '<text:p text:style-name="Horizontal_20_Line/">'
+end
+
+myWriter.Block.CodeBlock = function(block)
+  --[[
+  debug(block)
+  debug('attr :')
+  debug(block.attr)
+  debug('identifier')
+  debug(block.identifier)
+  debug('classes')
+  debug(block.classes)
+  debug('attributes')
+  debug(block.attributes)
+  debug(pandoc.write(pandoc.Pandoc({block}), 'opendocument')
+        :gsub('<text:p[^>]*>',
+              '<text:p text:style-name="' .. block.attributes.pStyle .. '">'))
+  ]]--
+  return pandoc.write(pandoc.Pandoc({block}), 'opendocument')
+        :gsub('<text:p[^>]*>',
+              '<text:p text:style-name="' .. block.attributes.pStyle .. '">')
+
+  --[[
+  return '<text:p text:style-name="'
+                          .. block.attributes.pStyle .. '">'
+                  .. myWriter.Inline.Str(block.text) .. '</text:p>'
+  ]]--
 end
 
 myWriter.Block.RawBlock = function(block)
@@ -246,6 +272,11 @@ function ByteStringWriter (doc, opts)
                   myWriter.Inlines(block.content)
       )
     end,
+    CodeBlock = function(block)
+      block.attributes.pStyle='Quoted_20_Preformatted_20_Text'
+      return List:new{pandoc.RawBlock('opendocument',
+                     myWriter.Block.CodeBlock(block))}
+    end,
   }
   --
   -- Accessory filter used to polish stuf just before writing
@@ -256,10 +287,14 @@ function ByteStringWriter (doc, opts)
                   myWriter.Inlines(block.content)
       )
     end,
+    CodeBlock = function(block)
+      block.attributes.pStyle='Preformatted_20_Text'
+      return List:new{pandoc.RawBlock('opendocument',
+                     myWriter.Block.CodeBlock(block))}
+    end,
   }
   --
   -- First filter used to process inlines and structures like Tables, BlockQuotes...
-  --
   local filterI = {
     --
     -- Metadata
@@ -293,7 +328,7 @@ function ByteStringWriter (doc, opts)
       return M.span('SmallCaps', el.content)
     end,
     Code = function(el)
-      return M.span('Source_Text', myWriter.Inline.Str(el.text))
+      return M.span('Source_20_Text', myWriter.Inline.Str(el.text))
     end,
     Quoted = function(el)
       -- TODO: localize quotes

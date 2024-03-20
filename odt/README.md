@@ -94,21 +94,40 @@ And another from D^r^. Gregory House (MD) :
 Here is some xml code.
 
 ~~~ .xml
-    <style:style style:name="Quotations"
-      style:family="paragraph"
-      style:parent-style-name="Standard"
-      style:class="html">
-      <!-- What about the style:class ? -->
-      <!-- Could use style:list-style-name to specify the list to be used in Quotations paragraphs -->
-      <style:paragraph-properties
-        fo:margin-left="1cm"
-        fo:margin-right="1cm" fo:margin-top="0.25cm"
-        fo:margin-bottom="0.25cm" style:contextual-spacing="false"
-        fo:text-indent="0in"
-        style:auto-text-indent="false" />
-    </style:style>
+<style:style style:name="Quotations"
+  style:family="paragraph"
+  style:parent-style-name="Standard"
+  style:class="html">
+  <!-- What about the style:class ? -->
+  <!-- Could use style:list-style-name to specify the list to be used in Quotations paragraphs -->
+  <style:paragraph-properties
+    fo:margin-left="1cm"
+    fo:margin-right="1cm" fo:margin-top="0.25cm"
+    fo:margin-bottom="0.25cm" style:contextual-spacing="false"
+    fo:text-indent="0in"
+    style:auto-text-indent="false" />
+</style:style>
 ~~~
 
+Here is some Lua code.
+
+~~~ .lua
+--------------------------------------------------------------------------------
+-- Create a counter
+--------------------------------------------------------------------------------
+function newCounter()
+  local value=0
+  return {
+    count = function()
+      value=value+1
+      return value
+    end,
+    current = function()
+      return value
+    end,
+  }
+end
+~~~
 #### Tables
 
 
