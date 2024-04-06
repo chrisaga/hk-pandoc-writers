@@ -3,6 +3,8 @@
 # Commands
 PANDOC := pandoc
 
+.PHONY :
+
 hk-reference.odt: hk-reference/*
 	cd hk-reference; zip -r ../hk-reference.odt *
 

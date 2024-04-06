@@ -65,10 +65,20 @@ local astyles = [[
 <style:style style:name="TableRowCell" style:family="table-cell">
   <style:table-cell-properties fo:padding="0.1cm" fo:border="none"/>
 </style:style>
+<style:style style:name="TableTopRowCell" style:family="table-cell">
+  <style:table-cell-properties fo:padding="0.1cm"
+   fo:border-left="none" fo:border-right="none"
+   fo:border-bottom="none" fo:border-top="0.5pt solid #000000"/>
+</style:style>
 <style:style style:name="TableBottomRowCell" style:family="table-cell">
   <style:table-cell-properties fo:padding="0.1cm"
    fo:border-left="none" fo:border-right="none"
    fo:border-top="none" fo:border-bottom="0.5pt solid #000000"/>
+</style:style>
+<style:style style:name="TableTopBottomRowCell" style:family="table-cell">
+  <style:table-cell-properties fo:padding="0.1cm"
+   fo:border-left="none" fo:border-right="none"
+   fo:border-top="0.5pt solid #000000" fo:border-bottom="0.5pt solid #000000"/>
 </style:style>
 ]]
 local tableContentsStyles = {
@@ -400,7 +410,7 @@ function ByteStringWriter (doc, opts)
         pStylesHeading[i]=tableHeadingStyles[colspec[1]]
       end
       -- Process TableHead rows
-      if(table.head) then
+      if(table.head and table.head.rows[1]) then
         tableString = tableString .. '  <table:table-header-rows>\n'
         for i, row in pairs(table.head.rows) do
           tableString = tableString
@@ -415,11 +425,21 @@ function ByteStringWriter (doc, opts)
       local body
       if(table.bodies) then
         for i, b in pairs(table.bodies) do
-          cellStyle='TableRowCell'
           body=b.body
           for r, row in pairs(body) do
-            if r == #body then
+            if( r == 1 and (table.head and not table.head.rows[1])) then
+              -- headerless table => style the top row
+              if r == #body then
+                -- only one row
+                cellStyle='TableTopBottomRowCell'
+              else
+                cellStyle='TableTopRowCell'
+              end
+            elseif r == #body then
+              -- style the bottom row
               cellStyle='TableBottomRowCell'
+            else
+              cellStyle='TableRowCell'
             end
             tableString = tableString
                           .. M.row(cellStyle, pStylesContents,
