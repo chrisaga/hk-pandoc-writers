@@ -17,6 +17,10 @@ function newCounter()
     current = function()
       return value
     end,
+    uncount = function()
+      value=value-1
+      return value
+    end,
   }
 end
   local ftnCount = newCounter()
@@ -80,7 +84,7 @@ local tableHeadingStyles = {
   AlignCenter = 'Table_20_Heading_20_AlignCenter',
 }
 --------------------------------------------------------------------------------
--- Accessory functions used to build odt xml content (might be a Lua module)
+-- Writer functions used to build opendocument xml content
 --------------------------------------------------------------------------------
 local myWriter = pandoc.scaffolding.Writer
 myWriter.Inlines = function(inlines) -- Why is this necessary ?
@@ -182,6 +186,9 @@ myWriter.Block.CodeBlock = function(block)
         :gsub('<text:p[^>]*>',
               '<text:p text:style-name="' .. block.attributes.pStyle .. '">'))
   ]]--
+  -- Use default opendocument writer since it does quite a good job
+  -- The paragraph style to bue used has been previously stored in
+  -- block.attributes.pStyle
   return pandoc.write(pandoc.Pandoc({block}), 'opendocument')
         :gsub('<text:p[^>]*>',
               '<text:p text:style-name="' .. block.attributes.pStyle .. '">')
@@ -197,6 +204,9 @@ myWriter.Block.RawBlock = function(block)
   return block.text
 end
 
+--------------------------------------------------------------------------------
+-- Accessory functions used to build odt xml content (might be a Lua module)
+--------------------------------------------------------------------------------
 local M = {
   span = function(style, content)
     if(type(content) == 'string') then
@@ -294,7 +304,7 @@ function ByteStringWriter (doc, opts)
     end,
   }
   --
-  -- First filter used to process inlines and structures like Tables, BlockQuotes...
+  -- First filter used to process inlines and structures like Tables.
   local filterI = {
     --
     -- Metadata
