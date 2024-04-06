@@ -155,6 +155,9 @@ end
 myWriter.Inline.Space = function ()
   return ' '
 end
+myWriter.Inline.SoftBreak = function ()
+  return ' '
+end
 --[[
 Writer.Inline.SoftBreak = function (_, opts)
   return opts.wrap_text == "wrap-preserve"
@@ -367,9 +370,9 @@ function ByteStringWriter (doc, opts)
     --
     -- Inline elements
     -- TODO: check ! Is this a hard break ?
-    SoftBreak = function()
-      return pandoc.RawInline('opendocument','<text:line-break/>')
-    end,
+    --SoftBreak = function()
+    --  return pandoc.RawInline('opendocument','<text:line-break/>')
+    --end,
     --
     -- Tables
     Table = function(table)

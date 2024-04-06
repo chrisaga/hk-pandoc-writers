@@ -553,6 +553,21 @@
       <table:last-row table:style-name="Table.Foot"/>
       <table:body table:style-name="Table.Body"/>
     </table:table-template>
+    <style:style style:name="Author" style:family="paragraph"
+      style:parent-style-name="Text_20_body" style:class="html">
+        <style:paragraph-properties fo:text-align="center" />
+    </style:style>
+    <style:style style:name="Date" style:family="paragraph"
+      style:parent-style-name="Text_20_body" style:class="html">
+        <style:paragraph-properties fo:text-align="center" />
+    </style:style>
+    <style:style style:name="Abstract" style:family="paragraph"
+      style:parent-style-name="Text_20_body" style:class="html">
+      <style:paragraph-properties fo:margin-left="0.3937in"
+      fo:margin-right="0.3937in" fo:margin-top="0.1in"
+      fo:margin-bottom="0.1in" style:contextual-spacing="false"
+      fo:text-indent="0in" style:auto-text-indent="false" />
+    </style:style>
     <!-- Inline styles -->
     <style:style style:name="Numbering_20_Symbols"
       style:display-name="Numbering Symbols" style:family="text" />
