@@ -456,6 +456,23 @@
         </style:tab-stops>
       </style:paragraph-properties>
     </style:style>
+    <!-- sould replace Definition_20_Term -->
+    <style:style style:name="List_20_Heading"
+      style:display-name="List Heading" style:family="paragraph"
+      style:parent-style-name="Standard"
+      style:next-style-name="List_20_Contents">
+      <style:paragraph-properties fo:margin-left="0cm"
+        fo:margin-right="0cm" fo:text-indent="0cm"
+        style:auto-text-indent="false"/>
+    </style:style>
+    <!-- sould replace Definition_20_Definition -->
+    <style:style style:name="List_20_Contents"
+      style:display-name="List Contents" style:family="paragraph"
+      style:parent-style-name="Standard">
+      <style:paragraph-properties fo:margin-left="1cm"
+        fo:margin-right="0cm" fo:text-indent="0cm"
+        style:auto-text-indent="false"/>
+    </style:style>
     <style:style style:name="Definition_20_Term"
     style:display-name="Definition Term" style:family="paragraph"
     style:parent-style-name="Standard"

@@ -94,6 +94,65 @@ local tableHeadingStyles = {
   AlignCenter = 'Table_20_Heading_20_AlignCenter',
 }
 --------------------------------------------------------------------------------
+-- Accessory functions used to build odt xml content (might be a Lua module)
+--------------------------------------------------------------------------------
+local M = {
+  spanStr = function(style, content)
+    return '<text:span text:style-name="' .. style .. '">'
+           .. content
+           .. '</text:span>'
+  end,
+
+  span = function(style, content)
+    if(type(content) == 'string') then
+      return List:new{pandoc.RawInline('opendocument',
+                          '<text:span text:style-name="'
+                          .. style .. '">'
+                .. content
+                .. '</text:span>')}
+    else
+      return List:new{pandoc.RawInline('opendocument',
+                          '<text:span text:style-name="'
+                          .. style .. '">')}
+                .. content
+                .. List:new{pandoc.RawInline('opendocument','</text:span>')}
+    end
+  end,
+  p = function(style, content)
+    if(type(content) == 'string') then
+      return List:new{pandoc.RawBlock('opendocument',
+                          '<text:p text:style-name="'
+                          .. style .. '">'
+                  .. content .. '</text:p>')}
+    else
+      return List:new{pandoc.RawBlock('opendocument',
+                          '<text:p text:style-name="'
+                          .. style .. '">')}
+                  .. content
+                  .. List:new{pandoc.RawBlock('opendocument','</text:p>')}
+    end
+  end,
+  cell = function(cellStyle, pStyle, tableStyles, cell)
+    return '      <table:table-cell table:style-name="'
+           .. cellStyle
+           ..'" office:value-type="string">\n        <text:p text:style-name="'
+           .. (cell.alignment == 'AlignDefault' and pStyle
+                                or tableStyles[cell.alignment])
+           .. '">'
+           .. myWriter.Blocks(cell.content)
+           .. '</text:p>\n      </table:table-cell>\n'
+  end,
+}
+
+M.row = function(cellStyle, pStyles, tableStyles, row)
+  local string='    <table:table-row>\n'
+  for i, el in pairs(row.cells) do
+    string = string .. M.cell(cellStyle, pStyles[i], tableStyles, el)
+  end
+  return string .. '    </table:table-row>'
+end
+
+--------------------------------------------------------------------------------
 -- Writer functions used to build opendocument xml content
 --------------------------------------------------------------------------------
 local myWriter = pandoc.scaffolding.Writer
@@ -113,13 +172,54 @@ myWriter.Blocks = function(blocks) -- Why is this necessary ?
   return tostring(string)
 end
 
+myWriter.Inline.Emph = function(el)
+  return M.spanStr('Emphasis', myWriter.Inlines(el.content))
+end
+
+myWriter.Inline.Strikeout = function(el)
+  return M.spanStr('Strikeout', myWriter.Inlines(el.content))
+end
+
+myWriter.Inline.Strong = function(el)
+  return M.spanStr('Strong_20_Emphasis', myWriter.Inlines(el.content))
+end
+
+myWriter.Inline.Subscript = function(el)
+  return M.spanStr('Subscript', myWriter.Inlines(el.content))
+end
+
+myWriter.Inline.Superscript = function(el)
+  return M.spanStr('Superscript', myWriter.Inlines(el.content))
+end
+
+myWriter.Inline.Underline = function(el)
+  return M.spanStr('Underline', myWriter.Inlines(el.content))
+end
+
+myWriter.Inline.SmallCaps = function(el)
+  return M.spanStr('SmallCaps', myWriter.Inlines(el.content))
+end
+
+myWriter.Inline.Code = function(el)
+  return M.spanStr('Source_20_Text', myWriter.Inline.Str(el.text))
+end
+
+myWriter.Inline.Quoted = function(el)
+  -- TODO: localize quotes
+  if el.quotetype == 'DoubleQuote' then
+    return '“' .. myWriter.Inlines(el.content) ..'”'
+  else
+    return '‘' .. myWriter.Inlines(el.content) ..'’'
+  end
+end
+
 myWriter.Inline.Link = function(el)
-      -- TODO: check style name
+  -- TODO: check style name
   return '<text:a xlink:type="simple" xlink:href="'
-             .. el.target:gsub('&', '&amp;')
-             .. '" text:style-name="Internet_20_link" text:visited-style-name="Visited_20_Internet_20_Link">'
-             .. myWriter.Inlines(el.content)
-             .. '</text:a>'
+     .. el.target:gsub('&', '&amp;')
+     .. '" text:style-name="Internet_20_link" text:visited-style-name="Visited_20_Internet_20_Link">'
+     .. myWriter.Inlines(el.content)
+     .. '</text:a>'
 end
 
 myWriter.Inline.Note = function(el)
@@ -205,71 +305,10 @@ myWriter.Block.CodeBlock = function(block)
   return pandoc.write(pandoc.Pandoc({block}), 'opendocument')
         :gsub('<text:p[^>]*>',
               '<text:p text:style-name="' .. block.attributes.pStyle .. '">')
-
-  --[[
-  return '<text:p text:style-name="'
-                          .. block.attributes.pStyle .. '">'
-                  .. myWriter.Inline.Str(block.text) .. '</text:p>'
-  ]]--
 end
 
 myWriter.Block.RawBlock = function(block)
   return block.text
-end
-
---------------------------------------------------------------------------------
--- Accessory functions used to build odt xml content (might be a Lua module)
---------------------------------------------------------------------------------
-local M = {
-  span = function(style, content)
-    if(type(content) == 'string') then
-      return List:new{pandoc.RawInline('opendocument',
-                          '<text:span text:style-name="'
-                          .. style .. '">'
-                .. content
-                .. '</text:span>')}
-    else
-      return List:new{pandoc.RawInline('opendocument',
-                          '<text:span text:style-name="'
-                          .. style .. '">')}
-                .. content
-                .. List:new{pandoc.RawInline('opendocument','</text:span>')}
-    end
-  end,
-  p = function(style, content)
-    -- TODO: See if wee need to accept Inline contents
-    if(type(content) == 'string') then
-      return List:new{pandoc.RawBlock('opendocument',
-                          '<text:p text:style-name="'
-                          .. style .. '">'
-                  .. content .. '</text:p>')}
-    else
-      return List:new{pandoc.RawBlock('opendocument',
-                          '<text:p text:style-name="'
-                          .. style .. '">')}
-                  .. content
-                  .. List:new{pandoc.RawBlock('opendocument','</text:p>')}
-    end
-  end,
-  cell = function(cellStyle, pStyle, tableStyles, cell)
-    local string='      <table:table-cell table:style-name="'
-                 .. cellStyle
-                 ..'" office:value-type="string">\n        <text:p text:style-name="'
-                 .. (cell.alignment == 'AlignDefault' and pStyle
-                                      or tableStyles[cell.alignment])
-                 .. '">'
-                 .. myWriter.Blocks(cell.content)
-                 .. '</text:p>\n      </table:table-cell>\n'
-    return string
-  end,
-}
-
-M.row = function(cellStyle, pStyles, tableStyles, row)
-  local string='    <table:table-row>\n'
-  for i, el in pairs(row.cells) do
-    string = string .. M.cell(cellStyle, pStyles[i], tableStyles, el)
-  end
-  return string .. '    </table:table-row>'
 end
 
 --------------------------------------------------------------------------------
@@ -317,7 +356,7 @@ function ByteStringWriter (doc, opts)
     end,
   }
   --
-  -- First filter used to process inlines and structures like Tables.
+  -- First filter used to process structures like Tables.
   local filterI = {
     --
     -- Metadata
@@ -327,52 +366,6 @@ function ByteStringWriter (doc, opts)
                 List:new{pandoc.RawBlock('opendocument',astyles)})
       return meta
     end,
-    --
-    -- Inline styles
-    Emph = function(el)
-      return M.span('Emphasis', el.content)
-    end,
-    Strikeout = function(el)
-      return M.span('Strikeout', el.content)
-    end,
-    Strong = function(el)
-      return M.span('Strong_20_Emphasis', el.content)
-    end,
-    Subscript = function(el)
-      return M.span('Subscript', el.content)
-    end,
-    Superscript = function(el)
-      return M.span('Superscript', el.content)
-    end,
-    Underline = function(el)
-      return M.span('Underline', el.content)
-    end,
-    SmallCaps = function(el)
-      return M.span('SmallCaps', el.content)
-    end,
-    Code = function(el)
-      return M.span('Source_20_Text', myWriter.Inline.Str(el.text))
-    end,
-    Quoted = function(el)
-      -- TODO: localize quotes
-      if el.quotetype == 'DoubleQuote' then
-        --debug(el.content)
-        --debug('“' .. myWriter.Inlines(el.content) ..'”')
-        return pandoc.RawInline('opendocument',
-                                 '“' .. myWriter.Inlines(el.content) ..'”')
-      else
-        --debug(el.content)
-        --debug('‘' .. myWriter.Inlines(el.content) ..'’')
-        return pandoc.RawInline('opendocument',
-                                 '‘' .. myWriter.Inlines(el.content) ..'’')
-      end
-    end,
-    --
-    -- Inline elements
-    -- TODO: check ! Is this a hard break ?
-    --SoftBreak = function()
-    --  return pandoc.RawInline('opendocument','<text:line-break/>')
-    --end,
     --
     -- Tables
     Table = function(table)
@@ -455,22 +448,7 @@ function ByteStringWriter (doc, opts)
       -- TODO
 
       tableString = tableString .. '</table:table>'
-      -- use Pandoc's writer to get the table done
-      --debug(table)
-      --[[
-      local sss=pandoc.write(pandoc.Pandoc({table}), 'opendocument')
-            :gsub('^(<[^>]*=")[^"]*','%1DefaultTable')
-      --debug('================')
-      --debug(tableString)
-      debug('================')
-      debug(sss)
-      debug('================')
-      --]]
-      --rList = rList .. List:new{pandoc.RawBlock('opendocument', sss)}
       rList = rList .. List:new{pandoc.RawBlock('opendocument', tableString)}
-
-      --debug(rList)
-      --debug('================')
 
       return rList
     end,
