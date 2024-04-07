@@ -112,7 +112,7 @@
       <style:paragraph-properties fo:margin-top="0cm"
         fo:margin-bottom="0.247cm"
         style:contextual-spacing="false"
-        fo:line-height="115%"/>
+        fo:line-height="100%"/>
     </style:style>
     <style:style style:name="First_20_paragraph"
       style:display-name="First paragraph" style:family="paragraph"
@@ -456,22 +456,37 @@
         </style:tab-stops>
       </style:paragraph-properties>
     </style:style>
-    <!-- sould replace Definition_20_Term -->
+    <!-- should replace Definition_20_Term -->
     <style:style style:name="List_20_Heading"
       style:display-name="List Heading" style:family="paragraph"
       style:parent-style-name="Standard"
       style:next-style-name="List_20_Contents">
       <style:paragraph-properties fo:margin-left="0cm"
+        fo:margin-bottom="0.247cm"
         fo:margin-right="0cm" fo:text-indent="0cm"
         style:auto-text-indent="false"/>
     </style:style>
-    <!-- sould replace Definition_20_Definition -->
+    <style:style style:name="List_20_Heading_20_Tight"
+      style:display-name="List Heading Thight" style:family="paragraph"
+      style:parent-style-name="List_20_Heading"
+      style:next-style-name="List_20_Contents_20_Tight">
+      <style:paragraph-properties fo:margin-bottom="0cm" />
+    </style:style>
+    <!-- should replace Definition_20_Definition -->
     <style:style style:name="List_20_Contents"
       style:display-name="List Contents" style:family="paragraph"
-      style:parent-style-name="Standard">
+      style:parent-style-name="Standard"
+      style:next-style-name="List_20_Contents">
       <style:paragraph-properties fo:margin-left="1cm"
+        fo:margin-bottom="0.247cm"
         fo:margin-right="0cm" fo:text-indent="0cm"
         style:auto-text-indent="false"/>
+    </style:style>
+    <style:style style:name="List_20_Contents_20_Tight"
+      style:display-name="List Contents Tight" style:family="paragraph"
+      style:parent-style-name="List_20_Contents"
+      style:next-style-name="List_20_Contents_20_Tight">
+      <style:paragraph-properties fo:margin-bottom="0cm" />
     </style:style>
     <style:style style:name="Definition_20_Term"
     style:display-name="Definition Term" style:family="paragraph"

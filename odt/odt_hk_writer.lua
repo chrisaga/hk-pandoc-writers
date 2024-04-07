@@ -23,7 +23,9 @@ function newCounter()
     end,
   }
 end
-  local ftnCount = newCounter()
+local ftnCount = newCounter()
+local inBlockQuote = newCounter()
+local inDefList = newCounter()
 --------------------------------------------------------------------------------
 -- Style to be included as so called "automatic-styles" in the document's
 -- content itself. This is needed due to Libre Office's poor table styling system
@@ -101,6 +103,10 @@ local M = {
     return '<text:span text:style-name="' .. style .. '">'
            .. content
            .. '</text:span>'
+  end,
+  pStr = function(style, content)
+    return '<text:p text:style-name="' .. style .. '">'
+           .. content .. '</text:p>'
   end,
 
   span = function(style, content)
@@ -258,26 +264,46 @@ end
 myWriter.Inline.SoftBreak = function ()
   return ' '
 end
+
+myWriter.Inline.LineBreak = function ()
+  return '<text:line-break/>'
+end
+
 --[[
 Writer.Inline.SoftBreak = function (_, opts)
   return opts.wrap_text == "wrap-preserve"
     and cr
     or space
 end
-Writer.Inline.LineBreak = cr
 
 Writer.Block.Para = function (para)
   return {Writer.Inlines(para.content), pandoc.layout.blankline}
 end
 --]]
 myWriter.Block.Plain = function(block)
-  return myWriter.Inlines(block.content)
+  if inBlockQuote.current() > 0 then
+    return M.pStr('Quotations_20_Tight', myWriter.Inlines(block.content))
+  elseif inDefList.current() > 0 then
+    return M.pStr('List_20_Contents_20_Tight', myWriter.Inlines(block.content))
+  else
+    return myWriter.Inlines(block.content)
+  end
 end
 
 myWriter.Block.Para = function(block)
+  --[[
   return '<text:p text:style-name="Text_20_body">'
          .. myWriter.Inlines(block.content)
          .. '</text:p>'
+         --]]
+  local pStyle='Text_20_body'
+  --TODO: handle nesting
+  if inBlockQuote.current() > 0 then
+    pStyle='Quotations'
+  elseif inDefList.current() > 0 then
+    pStyle='List_20_Contents'
+  end
+  return M.pStr(pStyle, myWriter.Inlines(block.content))
 end
 
 myWriter.Block.HorizontalRule = function()
@@ -302,6 +328,10 @@ myWriter.Block.CodeBlock = function(block)
   -- Use default opendocument writer since it does quite a good job
   -- The paragraph style to bue used has been previously stored in
   -- block.attributes.pStyle
+  if block.attributes.pStyle == nil then
+    -- TODO: better handle of nesting
+    block.attributes.pStyle='Preformatted_20_Text'
+  end
   return pandoc.write(pandoc.Pandoc({block}), 'opendocument')
         :gsub('<text:p[^>]*>',
               '<text:p text:style-name="' .. block.attributes.pStyle .. '">')
@@ -311,6 +341,38 @@ myWriter.Block.RawBlock = function(block)
   return block.text
 end
 
+myWriter.Block.DefinitionList = function(block)
+  inDefList.count()
+  local str = ''
+  for i, el in pairs(block.content) do
+    str = str .. M.pStr('List_20_Heading', myWriter.Inlines(el[1]))
+    --debug(el[2])
+    for _, blocks in pairs(el[2]) do
+      str = str .. myWriter.Blocks(blocks)
+    end
+  end
+  inDefList.uncount()
+  return str
+end
+
+myWriter.Block.BlockQuote = function(block)
+  inBlockQuote.count()
+  local str=myWriter.Blocks(block.content)
+  inBlockQuote.uncount()
+  return str
+end
+
+myWriter.Block.OrderedList = function(list)
+  local str = '<text:list text:style-name="Numbering_20_123">\n'
+  for i, el in pairs(list.content) do
+    str = str
+          .. '<text:list-item>\n'
+          .. myWriter.Blocks(el)
+          .. '</text:list-item>\n'
+  end
+  str = str .. '</text:list>\n'
+  return str
+end
 --------------------------------------------------------------------------------
 -- Main Writer function
 --
@@ -515,8 +577,27 @@ function ByteStringWriter (doc, opts)
 
   } -- end of main filter
 
-  -- write with the default writer and the filter
-  return pandoc.write(doc:walk(filterI):walk(filter):walk(filterF), 'odt', opts)
+  -- Process document
+  -- Note: filters function will probably be replaced by something here
+  local pList =  List:new{pandoc.RawBlock('opendocument','')}
+  for i, el in pairs(doc.blocks) do
+    --debug(el.tag)
+    if el.tag == 'Para' then
+      pList = pList .. {el}
+      --debug(el)
+      --debug(myWriter.Block[el.tag](el))
+    elseif el.tag == 'DefinitionList' then
+      --debug(myWriter.Block[el.tag](el))
+      pList = pList .. List:new{pandoc.RawBlock('opendocument',
+                                                myWriter.Block[el.tag](el))}
+    else
+      pList = pList .. {el}
+    end
+  end
+  local pDoc = pandoc.Pandoc(pList, doc.meta)
+
+  -- write with the default writer and the filters
+  return pandoc.write(pDoc:walk(filterI):walk(filter):walk(filterF), 'odt', opts)
 end -- of main writer function
 
 --------------------------------------------------------------------------------
