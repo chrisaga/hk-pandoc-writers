@@ -23,9 +23,33 @@ function newCounter()
     end,
   }
 end
+--------------------------------------------------------------------------------
+-- Create a stack
+--------------------------------------------------------------------------------
+function newStack()
+  local a={}
+  return {
+    push = function(v)
+      table.insert(a, v)
+    end,
+    pop = function()
+      return table.remove(a)
+    end,
+    pred = function()
+      return a[#a-1]
+    end,
+    last = function()
+      return a[#a]
+    end,
+  }
+end
+--------------------------------------------------------------------------------
+-- Global counters and stacks
+--------------------------------------------------------------------------------
 local ftnCount = newCounter()
 local inBlockQuote = newCounter()
 local inDefList = newCounter()
+local parents = newStack()
 --------------------------------------------------------------------------------
 -- Style to be included as so called "automatic-styles" in the document's
 -- content itself. This is needed due to Libre Office's poor table styling system
@@ -162,18 +186,22 @@ end
 -- Writer functions used to build opendocument xml content
 --------------------------------------------------------------------------------
 local myWriter = pandoc.scaffolding.Writer
-myWriter.Inlines = function(inlines) -- Why is this necessary ?
+myWriter.Inlines = function(inlines)
   local string = ''
   for i, el in pairs(inlines) do
+    parents.push(el.tag)
     string = string .. myWriter.Inline(el)
+    parents.pop()
   end
   return tostring(string)
 end
 
-myWriter.Blocks = function(blocks) -- Why is this necessary ?
+myWriter.Blocks = function(blocks)
   local string = ''
   for i, el in pairs(blocks) do
+    parents.push(el.tag)
     string = string .. myWriter.Block(el)
+    parents.pop()
   end
   return tostring(string)
 end
@@ -281,8 +309,12 @@ Writer.Block.Para = function (para)
 end
 --]]
 myWriter.Block.Plain = function(block)
+  local pred = parents.pred()
   if inBlockQuote.current() > 0 then
     return M.pStr('Quotations_20_Tight', myWriter.Inlines(block.content))
+  elseif pred == 'BulletList' or
+         pred == 'OrderedList' then
+    return M.pStr('Text_20_body_20_tight', myWriter.Inlines(block.content))
   elseif inDefList.current() > 0 then
     return M.pStr('List_20_Contents_20_Tight', myWriter.Inlines(block.content))
   else
@@ -291,11 +323,6 @@ myWriter.Block.Plain = function(block)
 end
 
 myWriter.Block.Para = function(block)
-  --[[
-  return '<text:p text:style-name="Text_20_body">'
-         .. myWriter.Inlines(block.content)
-         .. '</text:p>'
-         --]]
   local pStyle='Text_20_body'
   --TODO: handle nesting
   if inBlockQuote.current() > 0 then
@@ -311,20 +338,6 @@ myWriter.Block.HorizontalRule = function()
 end
 
 myWriter.Block.CodeBlock = function(block)
-  --[[
-  debug(block)
-  debug('attr :')
-  debug(block.attr)
-  debug('identifier')
-  debug(block.identifier)
-  debug('classes')
-  debug(block.classes)
-  debug('attributes')
-  debug(block.attributes)
-  debug(pandoc.write(pandoc.Pandoc({block}), 'opendocument')
-        :gsub('<text:p[^>]*>',
-              '<text:p text:style-name="' .. block.attributes.pStyle .. '">'))
-  ]]--
   -- Use default opendocument writer since it does quite a good job
   -- The paragraph style to bue used has been previously stored in
   -- block.attributes.pStyle
@@ -363,12 +376,30 @@ myWriter.Block.BlockQuote = function(block)
 end
 
 myWriter.Block.OrderedList = function(list)
+  --[[ TODO
+  list.start
+  list.style -- DefaultStyle, Example, Decimal, LowerRoman, UpperRoman, LowerAlpha,
+             -- UpperAlpha
+  list.delimiter -- DefaultDelim, Period, OneParen, and TwoParens
+  --]]
   local str = '<text:list text:style-name="Numbering_20_123">\n'
   for i, el in pairs(list.content) do
     str = str
           .. '<text:list-item>\n'
           .. myWriter.Blocks(el)
           .. '</text:list-item>\n'
+  end
+  str = str .. '</text:list>\n'
+  return str
+end
+
+myWriter.Block.BulletList = function(list)
+  local str = '<text:list text:style-name="List_20_2">\n'
+  for i, el in pairs(list.content) do
+    str = str
+        .. '<text:list-item>\n'
+        ..  myWriter.Blocks(el)
+        .. '</text:list-item>\n'
   end
   str = str .. '</text:list>\n'
   return str
@@ -529,6 +560,7 @@ function ByteStringWriter (doc, opts)
       debug(list.content)
       debug("---------------")
       --]]
+      debug('filter.' .. list.tag)
       local rList = List:new{pandoc.RawBlock('opendocument',
                              '<text:list text:style-name="List_20_2">')}
       for i, el in pairs(list.content) do
@@ -549,6 +581,8 @@ function ByteStringWriter (doc, opts)
       debug(list.content)
       debug("---------------")
       --]]
+      debug('filter.' .. list.tag)
+      debug(list)
       local rList = List:new{pandoc.RawBlock('opendocument',
                           '<text:list text:style-name="Numbering_20_123">')}
       for i, el in pairs(list.content) do
@@ -581,15 +615,18 @@ function ByteStringWriter (doc, opts)
   -- Note: filters function will probably be replaced by something here
   local pList =  List:new{pandoc.RawBlock('opendocument','')}
   for i, el in pairs(doc.blocks) do
-    --debug(el.tag)
     if el.tag == 'Para' then
-      pList = pList .. {el}
-      --debug(el)
-      --debug(myWriter.Block[el.tag](el))
-    elseif el.tag == 'DefinitionList' then
-      --debug(myWriter.Block[el.tag](el))
+      parents.push(el.tag)
       pList = pList .. List:new{pandoc.RawBlock('opendocument',
                                                 myWriter.Block[el.tag](el))}
+      parents.pop()
+    elseif el.tag == 'DefinitionList' or
+           el.tag == 'BulletList' or
+           el.tag == 'OrderedList' then
+      parents.push(el.tag)
+      pList = pList .. List:new{pandoc.RawBlock('opendocument',
+                                                myWriter.Block[el.tag](el))}
+      parents.pop()
     else
       pList = pList .. {el}
     end
