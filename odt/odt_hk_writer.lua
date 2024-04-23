@@ -55,7 +55,7 @@ local parents = newStack()
 -- content itself. This is needed due to Libre Office's poor table styling system
 --------------------------------------------------------------------------------
 -- TODO: adjust padding value
--- TODO: check if some inheritance from styles in the reference docis possible
+-- TODO: check if some inheritance from styles in the reference doc is possible
 -- style:parent-style-name attribute
 local astyles = [[
 <style:style style:name="DefaultTable" style:family="table">
@@ -119,6 +119,9 @@ local tableHeadingStyles = {
   AlignRight = 'Table_20_Heading_20_AlignRight',
   AlignCenter = 'Table_20_Heading_20_AlignCenter',
 }
+--------------------------------------------------------------------------------
+-- Declare myWriter in advance since it's used in M (should be fixed)
+local myWriter = pandoc.scaffolding.Writer
 --------------------------------------------------------------------------------
 -- Accessory functions used to build odt xml content (might be a Lua module)
 --------------------------------------------------------------------------------
@@ -185,7 +188,6 @@ end
 --------------------------------------------------------------------------------
 -- Writer functions used to build opendocument xml content
 --------------------------------------------------------------------------------
-local myWriter = pandoc.scaffolding.Writer
 myWriter.Inlines = function(inlines)
   local string = ''
   for i, el in pairs(inlines) do
@@ -234,6 +236,16 @@ myWriter.Inline.SmallCaps = function(el)
   return M.spanStr('SmallCaps', myWriter.Inlines(el.content))
 end
 
+myWriter.Inline.Span = function(el)
+  if el.classes:includes('mark') then
+    return M.spanStr('Highlighted', myWriter.Inlines(el.content))
+  elseif #el.classes == 1 then
+    -- assume we can transparently pass it as a style name
+    return M.spanStr(el.classes[1], myWriter.Inlines(el.content))
+  end
+end
+
+
 myWriter.Inline.Code = function(el)
   return M.spanStr('Source_20_Text', myWriter.Inline.Str(el.text))
 end
@@ -257,6 +269,7 @@ myWriter.Inline.Link = function(el)
 end
 
 myWriter.Inline.Note = function(el)
+  -- TODO: bug: some notes are missing their content
   return '<text:note text:id="ftn'
   .. tostring(ftnCount.current())
   .. '" text:note-class="footnote"><text:note-citation>'
