@@ -280,9 +280,7 @@ myWriter.Inline.Note = function(el)
   .. '" text:note-class="footnote"><text:note-citation>'
   .. tostring(ftnCount.count())
   .. '</text:note-citation><text:note-body>'
-  --.. '<text:p text:style-name="Footnote">'
   .. myWriter.Blocks(el.content)
-  --.. '</text:p>'
   .. '</text:note-body></text:note>'
   environments.pop()
   return str
@@ -364,7 +362,7 @@ end
 
 myWriter.Block.CodeBlock = function(block)
   -- Use default opendocument writer since it does quite a good job
-  -- The paragraph style to bue used has been previously stored in
+  -- The paragraph style to be used has been previously stored in
   -- block.attributes.pStyle
   if block.attributes.pStyle == nil then
     -- TODO: better handle of nesting
@@ -442,30 +440,6 @@ end
 function ByteStringWriter (doc, opts)
   local tableCount = newCounter()
   --
-  -- Accessory filter used to write BlockQuote which can contain Para and Plain
-  -- blocks (Plain blocks are for tight list items)
-  --
-  local filterBQ = {
-    --[[
-    Para = function(block)
-      return M.p("Quotations",
-                  myWriter.Inlines(block.content)
-      )
-    end,
-    Plain = function(block)
-      return M.p("Quotations_20_tight",
-                  myWriter.Inlines(block.content)
-      )
-    end,
-    CodeBlock = function(block)
-      debug('filterBQ.' .. block.tag)
-      block.attributes.pStyle='Quoted_20_Preformatted_20_Text'
-      return List:new{pandoc.RawBlock('opendocument',
-                     myWriter.Block.CodeBlock(block))}
-    end,
-    ]]--
-  }
-  --
   -- Accessory filter used to polish stuf just before writing
   --
   local filterF = {
@@ -476,14 +450,6 @@ function ByteStringWriter (doc, opts)
                   myWriter.Inlines(block.content)
       )
     end,
-    --[[
-    CodeBlock = function(block)
-      debug('filterF.' .. block.tag)
-      block.attributes.pStyle='Preformatted_20_Text'
-      return List:new{pandoc.RawBlock('opendocument',
-                     myWriter.Block.CodeBlock(block))}
-    end,
-    --]]
   }
   --
   -- First filter used to process structures like Tables.
@@ -583,66 +549,6 @@ function ByteStringWriter (doc, opts)
       return rList
     end,
   }
-  --
-  -- Main filter used to write blocks in xml odt
-  --
-  local filter = {
-    --[[
-    -- Lists : list items are Para blocks in loose lists and Plain blocks in
-    --         tight lists.
-    --
-    -- Bullet Lists
-    BulletList = function(list)
-      debug('filter.' .. list.tag)
-      local rList = List:new{pandoc.RawBlock('opendocument',
-                             '<text:list text:style-name="List_20_2">')}
-      for i, el in pairs(list.content) do
-        rList = rList
-            .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
-            .. el
-            .. List:new{pandoc.RawBlock('opendocument','</text:list-item>')}
-      end
-      rList = rList .. List:new{pandoc.RawBlock('opendocument',
-                                                '</text:list>')}
-      return rList
-    end,
-    --
-    -- Ordered Lists
-    OrderedList = function(list)
-      --[[
-      debug('filter.' .. list.tag)
-      debug(list)
-      local rList = List:new{pandoc.RawBlock('opendocument',
-                          '<text:list text:style-name="Numbering_20_123">')}
-      for i, el in pairs(list.content) do
-        rList = rList
-            .. List:new{pandoc.RawBlock('opendocument','<text:list-item>')}
-            .. el
-            .. List:new{pandoc.RawBlock('opendocument','</text:list-item>')}
-        --debug('[' .. tostring(i) .. ']' .. pandoc.utils.stringify(el))
-      end
-      rList = rList .. List:new{pandoc.RawBlock('opendocument',
-                                                '</text:list>')}
-
-      --debug(rList)
-      return rList
-    end,
-    --
-    -- BlockQuote
-    BlockQuote = function(block)
-      debug('filter.' .. block.tag)
-      return pandoc.walk_block(block, filterBQ).content
-    end,
-    --
-    -- Plain (default writer makes them paragraphs)
-    Plain = function(block)
-      debug('filter.' .. block.tag)
-      return block
-    end,
-    --]]
-
-  } -- end of main filter
-
   -- Process document
   -- Note: filters function will probably be replaced by something here
   local pList =  List:new{pandoc.RawBlock('opendocument','')}
@@ -668,7 +574,7 @@ function ByteStringWriter (doc, opts)
   local pDoc = pandoc.Pandoc(pList, doc.meta)
 
   -- write with the default writer and the filters
-  return pandoc.write(pDoc:walk(filterI):walk(filter):walk(filterF), 'odt', opts)
+  return pandoc.write(pDoc:walk(filterI):walk(filterF), 'odt', opts)
 end -- of main writer function
 
 --------------------------------------------------------------------------------
