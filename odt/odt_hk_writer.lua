@@ -50,6 +50,7 @@ local ftnCount = newCounter()
 local inBlockQuote = newCounter()
 local inDefList = newCounter()
 local parents = newStack()
+local environments = newStack()
 --------------------------------------------------------------------------------
 -- Style to be included as so called "automatic-styles" in the document's
 -- content itself. This is needed due to Libre Office's poor table styling system
@@ -118,6 +119,9 @@ local tableHeadingStyles = {
   AlignLeft = 'Table_20_Heading_20_AlignLeft',
   AlignRight = 'Table_20_Heading_20_AlignRight',
   AlignCenter = 'Table_20_Heading_20_AlignCenter',
+}
+local paraStyles = {
+  Note = 'Footnote',
 }
 --------------------------------------------------------------------------------
 -- Declare myWriter in advance since it's used in M (should be fixed)
@@ -270,13 +274,18 @@ end
 
 myWriter.Inline.Note = function(el)
   -- TODO: bug: some notes are missing their content
-  return '<text:note text:id="ftn'
+  environments.push(el.tag)
+  local str = '<text:note text:id="ftn'
   .. tostring(ftnCount.current())
   .. '" text:note-class="footnote"><text:note-citation>'
   .. tostring(ftnCount.count())
-  .. '</text:note-citation><text:note-body><text:p text:style-name="Footnote">'
+  .. '</text:note-citation><text:note-body>'
+  --.. '<text:p text:style-name="Footnote">'
   .. myWriter.Blocks(el.content)
-  .. '</text:p></text:note-body></text:note>'
+  --.. '</text:p>'
+  .. '</text:note-body></text:note>'
+  environments.pop()
+  return str
 end
 
 myWriter.Inline.Math = function (el)
@@ -324,7 +333,7 @@ end
 myWriter.Block.Plain = function(block)
   local pred = parents.pred()
   if inBlockQuote.current() > 0 then
-    return M.pStr('Quotations_20_Tight', myWriter.Inlines(block.content))
+    return M.pStr('Quotations_20_tight', myWriter.Inlines(block.content))
   elseif pred == 'BulletList' or
          pred == 'OrderedList' then
     return M.pStr('Text_20_body_20_tight', myWriter.Inlines(block.content))
@@ -338,7 +347,10 @@ end
 myWriter.Block.Para = function(block)
   local pStyle='Text_20_body'
   --TODO: handle nesting
-  if inBlockQuote.current() > 0 then
+  --debug(environments.last())
+  if environments.last() == 'Note' then
+    pStyle=paraStyles.Note
+  elseif inBlockQuote.current() > 0 then
     pStyle='Quotations'
   elseif inDefList.current() > 0 then
     pStyle='List_20_Contents'
@@ -356,7 +368,11 @@ myWriter.Block.CodeBlock = function(block)
   -- block.attributes.pStyle
   if block.attributes.pStyle == nil then
     -- TODO: better handle of nesting
-    block.attributes.pStyle='Preformatted_20_Text'
+    if inBlockQuote.current() > 0 then
+      block.attributes.pStyle='Quoted_20_Preformatted_20_Text'
+    else
+      block.attributes.pStyle='Preformatted_20_Text'
+    end
   end
   return pandoc.write(pandoc.Pandoc({block}), 'opendocument')
         :gsub('<text:p[^>]*>',
@@ -430,6 +446,7 @@ function ByteStringWriter (doc, opts)
   -- blocks (Plain blocks are for tight list items)
   --
   local filterBQ = {
+    --[[
     Para = function(block)
       return M.p("Quotations",
                   myWriter.Inlines(block.content)
@@ -441,25 +458,32 @@ function ByteStringWriter (doc, opts)
       )
     end,
     CodeBlock = function(block)
+      debug('filterBQ.' .. block.tag)
       block.attributes.pStyle='Quoted_20_Preformatted_20_Text'
       return List:new{pandoc.RawBlock('opendocument',
                      myWriter.Block.CodeBlock(block))}
     end,
+    ]]--
   }
   --
   -- Accessory filter used to polish stuf just before writing
   --
   local filterF = {
     Plain = function(block)
+      debug('filterF.' .. block.tag)
+      debug(block)
       return M.p("Text_20_body_20_tight",
                   myWriter.Inlines(block.content)
       )
     end,
+    --[[
     CodeBlock = function(block)
+      debug('filterF.' .. block.tag)
       block.attributes.pStyle='Preformatted_20_Text'
       return List:new{pandoc.RawBlock('opendocument',
                      myWriter.Block.CodeBlock(block))}
     end,
+    --]]
   }
   --
   -- First filter used to process structures like Tables.
@@ -563,16 +587,12 @@ function ByteStringWriter (doc, opts)
   -- Main filter used to write blocks in xml odt
   --
   local filter = {
+    --[[
     -- Lists : list items are Para blocks in loose lists and Plain blocks in
     --         tight lists.
     --
     -- Bullet Lists
     BulletList = function(list)
-      --[[
-      debug("---------------")
-      debug(list.content)
-      debug("---------------")
-      --]]
       debug('filter.' .. list.tag)
       local rList = List:new{pandoc.RawBlock('opendocument',
                              '<text:list text:style-name="List_20_2">')}
@@ -590,10 +610,6 @@ function ByteStringWriter (doc, opts)
     -- Ordered Lists
     OrderedList = function(list)
       --[[
-      debug("---------------")
-      debug(list.content)
-      debug("---------------")
-      --]]
       debug('filter.' .. list.tag)
       debug(list)
       local rList = List:new{pandoc.RawBlock('opendocument',
@@ -614,13 +630,16 @@ function ByteStringWriter (doc, opts)
     --
     -- BlockQuote
     BlockQuote = function(block)
+      debug('filter.' .. block.tag)
       return pandoc.walk_block(block, filterBQ).content
     end,
     --
     -- Plain (default writer makes them paragraphs)
     Plain = function(block)
+      debug('filter.' .. block.tag)
       return block
     end,
+    --]]
 
   } -- end of main filter
 
@@ -635,7 +654,9 @@ function ByteStringWriter (doc, opts)
       parents.pop()
     elseif el.tag == 'DefinitionList' or
            el.tag == 'BulletList' or
-           el.tag == 'OrderedList' then
+           el.tag == 'OrderedList' or
+           el.tag == 'CodeBlock' or
+           el.tag == 'BlockQuote' then
       parents.push(el.tag)
       pList = pList .. List:new{pandoc.RawBlock('opendocument',
                                                 myWriter.Block[el.tag](el))}
