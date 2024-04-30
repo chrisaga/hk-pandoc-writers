@@ -46,6 +46,7 @@ end
 --------------------------------------------------------------------------------
 -- Global counters and stacks
 --------------------------------------------------------------------------------
+local tableCount = newCounter()
 local ftnCount = newCounter()
 local inBlockQuote = newCounter()
 local inDefList = newCounter()
@@ -273,7 +274,6 @@ myWriter.Inline.Link = function(el)
 end
 
 myWriter.Inline.Note = function(el)
-  -- TODO: bug: some notes are missing their content
   environments.push(el.tag)
   local str = '<text:note text:id="ftn'
   .. tostring(ftnCount.current())
@@ -431,6 +431,93 @@ myWriter.Block.BulletList = function(list)
   str = str .. '</text:list>\n'
   return str
 end
+
+myWriter.Block.Table = function(table)
+      tableCount.count()
+      local  pStylesHeading= {}
+      local  pStylesContents= {}
+
+  local tableString = ""
+  -- Process table caption if any
+  if table.caption.long[1] then
+    --TODO: use caption.short if exists
+    tableString = M.pStr('Table',
+                  'Table <text:sequence text:ref-name="refTable'
+                  .. tableCount.current()
+                  .. '" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">'
+                  .. tableCount.current()
+                  .. '</text:sequence>: '
+                  .. myWriter.Blocks(table.caption.long))
+                  .. '\n'
+    table.caption.long = nil
+  end
+  --
+  -- Start the Table
+  --debug(table.identifier)
+  tableString = tableString .. '<table:table table:name="Table'
+              .. tableCount.current()
+              .. '" table:style-name="DefaultTable">\n'
+  --
+  -- Process column specifications : alignment and width
+  -- TODO: process width
+  for i, colspec in pairs(table.colspecs) do
+    --debug(" " .. i .. " " .. colspec[1]) --ColWidthDefault is nil ???
+    tableString = tableString
+                  .. '  <table:table-column table:style-name="Table'
+                  .. colspec[1] .. '" />\n'
+    -- build list of paragraph styles based on text alignment for each column
+    pStylesContents[i]=tableContentsStyles[colspec[1]]
+    pStylesHeading[i]=tableHeadingStyles[colspec[1]]
+  end
+  --
+  -- Process TableHead rows
+  if(table.head and table.head.rows[1]) then
+        tableString = tableString .. '  <table:table-header-rows>\n'
+    for i, row in pairs(table.head.rows) do
+      tableString = tableString
+                    .. M.row('TableHeaderRowCell', pStylesHeading,
+                              tableHeadingStyles, row)
+                    .. '\n'
+    end
+      tableString = tableString  .. '  </table:table-header-rows>\n'
+    end
+  --
+  -- Process TableBody rows
+  local cellStyle=''
+  local body
+  if(table.bodies) then
+    for i, b in pairs(table.bodies) do
+      body=b.body
+      for r, row in pairs(body) do
+        if( r == 1 and (table.head and not table.head.rows[1])) then
+          -- headerless table => style the top row
+          if r == #body then
+            -- only one row
+            cellStyle='TableTopBottomRowCell'
+          else
+            cellStyle='TableTopRowCell'
+          end
+        elseif r == #body then
+          -- style the bottom row
+          -- TODO: test if there is a TableFoot
+          cellStyle='TableBottomRowCell'
+        else
+          cellStyle='TableRowCell'
+        end
+        tableString = tableString
+                      .. M.row(cellStyle, pStylesContents, tableContentsStyles, row)
+                      .. '\n'
+      end
+    end
+  end
+  --
+  -- Process TableFoot rows
+  -- TODO
+
+  -- End the Table
+  tableString = tableString .. '</table:table>'
+  return tableString
+end
 --------------------------------------------------------------------------------
 -- Main Writer function
 --
@@ -438,7 +525,6 @@ end
 -- Writer is OK for flat opendocument (content.xml)
 --------------------------------------------------------------------------------
 function ByteStringWriter (doc, opts)
-  local tableCount = newCounter()
   --
   -- Accessory filter used to polish stuf just before writing
   --
@@ -451,118 +537,20 @@ function ByteStringWriter (doc, opts)
       )
     end,
   }
-  --
-  -- First filter used to process structures like Tables.
-  local filterI = {
-    --
-    -- Metadata
-    Meta = function(meta)
-      -- TODO: test if the meta is passed via another way
-      meta['automatic-styles']=pandoc.MetaBlocks(
-                List:new{pandoc.RawBlock('opendocument',astyles)})
-      return meta
-    end,
-    --
-    -- Tables
-    Table = function(table)
-      tableCount.count()
-      local  pStylesHeading= {}
-      local  pStylesContents= {}
-
-      local rList
-      -- Process table caption if any
-      if table.caption.long[1] then
-        --TODO: use caption.short if exists
-        rList = M.p('Table',
-                  'Table <text:sequence text:ref-name="refTable'
-                  .. tableCount.current()
-                  .. '" text:name="Table" text:formula="ooow:Table+1" style:num-format="1">'
-                  .. tableCount.current()
-                  .. '</text:sequence>: '
-                  .. myWriter.Blocks(table.caption.long))
-        table.caption.long = nil
-      else
-        rList = {}
-      end
-
-      -- Start table
-      --debug(table.identifier)
-      local tableString = '<table:table table:name="Table'
-              .. tableCount.current()
-              .. '" table:style-name="DefaultTable">\n'
-      -- Process column specifications : alignment and width
-      -- TODO: process width
-      for i, colspec in pairs(table.colspecs) do
-        --debug(" " .. i .. " " .. colspec[1]) --ColWidthDefault is nil ???
-        tableString = tableString
-                      .. '  <table:table-column table:style-name="Table'
-                      .. colspec[1] .. '" />\n'
-        -- build list of paragraph styles based on text alignment for each column
-        pStylesContents[i]=tableContentsStyles[colspec[1]]
-        pStylesHeading[i]=tableHeadingStyles[colspec[1]]
-      end
-      -- Process TableHead rows
-      if(table.head and table.head.rows[1]) then
-        tableString = tableString .. '  <table:table-header-rows>\n'
-        for i, row in pairs(table.head.rows) do
-          tableString = tableString
-                        .. M.row('TableHeaderRowCell', pStylesHeading,
-                                  tableHeadingStyles, row)
-                        .. '\n'
-        end
-        tableString = tableString  .. '  </table:table-header-rows>\n'
-      end
-      -- Process TableBody rows
-      local cellStyle=''
-      local body
-      if(table.bodies) then
-        for i, b in pairs(table.bodies) do
-          body=b.body
-          for r, row in pairs(body) do
-            if( r == 1 and (table.head and not table.head.rows[1])) then
-              -- headerless table => style the top row
-              if r == #body then
-                -- only one row
-                cellStyle='TableTopBottomRowCell'
-              else
-                cellStyle='TableTopRowCell'
-              end
-            elseif r == #body then
-              -- style the bottom row
-              cellStyle='TableBottomRowCell'
-            else
-              cellStyle='TableRowCell'
-            end
-            tableString = tableString
-                          .. M.row(cellStyle, pStylesContents,
-                                   tableContentsStyles, row)
-                          .. '\n'
-          end
-        end
-      end
-      -- Process TableFoot rows
-      -- TODO
-
-      tableString = tableString .. '</table:table>'
-      rList = rList .. List:new{pandoc.RawBlock('opendocument', tableString)}
-
-      return rList
-    end,
-  }
   -- Process document
-  -- Note: filters function will probably be replaced by something here
+  -- Note 1: filters function will probably be replaced by something here
+  -- Note 2: then it will be possible to have everything in a single RawBlock
+  --
+  -- Build the block(s)
   local pList =  List:new{pandoc.RawBlock('opendocument','')}
   for i, el in pairs(doc.blocks) do
-    if el.tag == 'Para' then
-      parents.push(el.tag)
-      pList = pList .. List:new{pandoc.RawBlock('opendocument',
-                                                myWriter.Block[el.tag](el))}
-      parents.pop()
-    elseif el.tag == 'DefinitionList' or
+    if el.tag == 'Para' or
+           el.tag == 'DefinitionList' or
            el.tag == 'BulletList' or
            el.tag == 'OrderedList' or
            el.tag == 'CodeBlock' or
-           el.tag == 'BlockQuote' then
+           el.tag == 'BlockQuote' or
+           el.tag == 'Table' then
       parents.push(el.tag)
       pList = pList .. List:new{pandoc.RawBlock('opendocument',
                                                 myWriter.Block[el.tag](el))}
@@ -571,10 +559,14 @@ function ByteStringWriter (doc, opts)
       pList = pList .. {el}
     end
   end
+  --
+  -- Make the Doc
   local pDoc = pandoc.Pandoc(pList, doc.meta)
-
-  -- write with the default writer and the filters
-  return pandoc.write(pDoc:walk(filterI):walk(filterF), 'odt', opts)
+  pDoc.meta['automatic-styles']=pandoc.MetaBlocks(
+                List:new{pandoc.RawBlock('opendocument',astyles)})
+  --
+  -- Write the doc with the default writer and the filters
+  return pandoc.write(pDoc:walk(filterF), 'odt', opts)
 end -- of main writer function
 
 --------------------------------------------------------------------------------
