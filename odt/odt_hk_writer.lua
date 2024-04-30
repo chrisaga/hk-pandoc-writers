@@ -290,6 +290,7 @@ myWriter.Inline.Math = function (el)
   return el.text
 end
 
+-- TODO: at least use the default writer to handle this
 myWriter.Inline.Image = function (el)
   return '[Image not supported yet]'
 end
@@ -377,6 +378,8 @@ myWriter.Block.CodeBlock = function(block)
               '<text:p text:style-name="' .. block.attributes.pStyle .. '">')
 end
 
+--TODO: don't assume RawBlock is opendocument format and do the "right" thing
+--      see how to pass the writer.native test with raw html tables
 myWriter.Block.RawBlock = function(block)
   return block.text
 end
@@ -518,6 +521,15 @@ myWriter.Block.Table = function(table)
   tableString = tableString .. '</table:table>'
   return tableString
 end
+
+myWriter.Block.Div = function (div)
+  --TODO: Div doesn't really exist in opendocument see if we can do more
+  return myWriter.Blocks(div.content)
+end
+
+--TODO:
+--myWriter.Block.Div = function (div)
+--end
 --------------------------------------------------------------------------------
 -- Main Writer function
 --
@@ -525,21 +537,9 @@ end
 -- Writer is OK for flat opendocument (content.xml)
 --------------------------------------------------------------------------------
 function ByteStringWriter (doc, opts)
-  --
-  -- Accessory filter used to polish stuf just before writing
-  --
-  local filterF = {
-    Plain = function(block)
-      debug('filterF.' .. block.tag)
-      debug(block)
-      return M.p("Text_20_body_20_tight",
-                  myWriter.Inlines(block.content)
-      )
-    end,
-  }
   -- Process document
-  -- Note 1: filters function will probably be replaced by something here
-  -- Note 2: then it will be possible to have everything in a single RawBlock
+  -- Note 1: filters function will probably be replaced by something here -> DONE
+  -- Note 2: then it will be possible to have everything in a single RawBlock -> TODO
   --
   -- Build the block(s)
   local pList =  List:new{pandoc.RawBlock('opendocument','')}
@@ -550,7 +550,8 @@ function ByteStringWriter (doc, opts)
            el.tag == 'OrderedList' or
            el.tag == 'CodeBlock' or
            el.tag == 'BlockQuote' or
-           el.tag == 'Table' then
+           el.tag == 'Table' or
+           el.tag == 'Div' then
       parents.push(el.tag)
       pList = pList .. List:new{pandoc.RawBlock('opendocument',
                                                 myWriter.Block[el.tag](el))}
@@ -566,7 +567,7 @@ function ByteStringWriter (doc, opts)
                 List:new{pandoc.RawBlock('opendocument',astyles)})
   --
   -- Write the doc with the default writer and the filters
-  return pandoc.write(pDoc:walk(filterF), 'odt', opts)
+  return pandoc.write(pDoc, 'odt', opts)
 end -- of main writer function
 
 --------------------------------------------------------------------------------
