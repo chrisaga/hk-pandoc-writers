@@ -13,7 +13,7 @@ function Writer (doc, opts)
       -- only modify if code bloc have right class
       -- TODO: make a table of function
       if block.classes:includes('tikz') then
-        rawcode = '\\begin{tikzpicture}' .. block.text ..'\\end{tikzpicture}'
+        rawcode = '\\begin{tikzpicture}' .. block.text ..'\n\\end{tikzpicture}'
 	-- TODO: don't add environment if already in code for backward comp
         -- TODO: handle \usetikzlibrary as it was in the original filter
       elseif block.classes:includes('plantuml') then
